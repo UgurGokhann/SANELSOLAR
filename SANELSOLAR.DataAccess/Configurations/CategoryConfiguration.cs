@@ -13,6 +13,7 @@ namespace SANELSOLAR.DataAccess.Configurations
     {
         public void Configure(EntityTypeBuilder<Category> builder)
         {
+            builder.ConfigureBaseEntity();
             builder.HasKey(x => x.CategoryId);
             builder.Property(c => c.Name).IsRequired().HasMaxLength(50);
             builder.Property(c => c.Description).HasMaxLength(100);

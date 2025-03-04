@@ -8,6 +8,7 @@ namespace SANELSOLAR.DataAccess.Configurations
     {
         public void Configure(EntityTypeBuilder<Offer> builder)
         {
+            builder.ConfigureBaseEntity();
             builder.HasKey(x => x.OfferId);
             builder.Property(o => o.OfferDate).IsRequired();
             builder.Property(o => o.ValidUntil).IsRequired();
