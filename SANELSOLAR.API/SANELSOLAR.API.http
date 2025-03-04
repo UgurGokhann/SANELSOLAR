@@ -1,0 +1,6 @@
+@SANELSOLAR.API_HostAddress = http://localhost:5145
+
+GET {{SANELSOLAR.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
