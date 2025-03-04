@@ -12,7 +12,7 @@ namespace SANELSOLAR.DTOs
         public List<int> CategoryIds { get; set; }
     }
 
-    // DTO for updating an existing produc
+    // DTO for updating an existing product
     public class ProductUpdateDto : UpdateDTO
     {
         public int ProductId { get; set; }
