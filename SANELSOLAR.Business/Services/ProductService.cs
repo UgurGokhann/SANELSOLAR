@@ -5,6 +5,10 @@ using SANELSOLAR.Common;
 using SANELSOLAR.DataAccess.Interfaces;
 using SANELSOLAR.DTOs;
 using SANELSOLAR.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SANELSOLAR.Business.Services
 {
@@ -34,6 +38,14 @@ namespace SANELSOLAR.Business.Services
                 if (validationResult.IsValid)
                 {
                     var product = _mapper.Map<Product>(dto);
+                    
+                    // Veritabanına kaydedilecek entity'nin metin alanlarını büyük harfe dönüştür
+                    if (!string.IsNullOrEmpty(product.Name))
+                        product.Name = product.Name.ToUpper();
+                    
+                    if (!string.IsNullOrEmpty(product.Description))
+                        product.Description = product.Description.ToUpper();
+                    
                     await _uow.GetRepository<Product>().CreateAsync(product);
                     await _uow.SaveChangesAsync();
 
@@ -84,6 +96,14 @@ namespace SANELSOLAR.Business.Services
                     if (unchangedEntity != null)
                     {
                         var entity = _mapper.Map<Product>(dto);
+                        
+                        // Veritabanına kaydedilecek entity'nin metin alanlarını büyük harfe dönüştür
+                        if (!string.IsNullOrEmpty(entity.Name))
+                            entity.Name = entity.Name.ToUpper();
+                        
+                        if (!string.IsNullOrEmpty(entity.Description))
+                            entity.Description = entity.Description.ToUpper();
+                        
                         entity.ProductId = dto.ProductId;
                         entity.CreatedDate = unchangedEntity.CreatedDate;
                         entity.CreatedUserId = unchangedEntity.CreatedUserId;
@@ -109,14 +129,13 @@ namespace SANELSOLAR.Business.Services
                                 {
                                     ProductId = dto.ProductId,
                                     CategoryId = categoryId,
-                                    CreatedUserId = unchangedEntity.CreatedUserId,
-                                    UpdatedUserId = dto.UpdatedUserId,
+                                    CreatedUserId = dto.UpdatedUserId,
                                     IsActive = true
                                 };
                                 await _uow.GetRepository<ProductCategory>().CreateAsync(productCategory);
                             }
                         }
-
+                        
                         await _uow.SaveChangesAsync();
                         return new Response<ProductUpdateDto>(ResponseType.Success, dto);
                     }
@@ -174,10 +193,12 @@ namespace SANELSOLAR.Business.Services
                     return new Response<List<ProductCreateDto>>(ResponseType.ValidationError, "Arama terimi boş olamaz");
                 }
 
-                var normalizedSearchTerm = searchTerm.ToLower();
+                // Convert search term to uppercase for case-insensitive search
+                var upperSearchTerm = searchTerm.ToUpper();
+                
                 var products = await _uow.GetRepository<Product>()
-                    .GetAllAsync(x => (x.Name.ToLower().Contains(normalizedSearchTerm) ||
-                                     x.Description.ToLower().Contains(normalizedSearchTerm)) &&
+                    .GetAllAsync(x => (x.Name.Contains(upperSearchTerm) ||
+                                     x.Description.Contains(upperSearchTerm)) &&
                                      x.IsActive);
 
                 if (products == null || !products.Any())
@@ -204,11 +225,6 @@ namespace SANELSOLAR.Business.Services
                     return new Response<ProductCreateDto>(ResponseType.NotFound, "Ürün bulunamadı");
                 }
 
-                if (categoryIds == null || !categoryIds.Any())
-                {
-                    return new Response<ProductCreateDto>(ResponseType.ValidationError, "En az bir kategori seçilmelidir");
-                }
-
                 // Mevcut kategorileri kaldır
                 var existingCategories = await _uow.GetRepository<ProductCategory>()
                     .GetAllAsync(x => x.ProductId == productId);
@@ -217,26 +233,26 @@ namespace SANELSOLAR.Business.Services
                 {
                     _uow.GetRepository<ProductCategory>().Remove(category);
                 }
-                
+
                 // Yeni kategorileri ekle
-                foreach (var categoryId in categoryIds)
+                if (categoryIds != null && categoryIds.Count > 0)
                 {
-                    var productCategory = new ProductCategory
+                    foreach (var categoryId in categoryIds)
                     {
-                        ProductId = productId,
-                        CategoryId = categoryId,
-                        CreatedUserId = product.CreatedUserId,
-                        UpdatedUserId = product.UpdatedUserId,
-                        IsActive = true
-                    };
-                    await _uow.GetRepository<ProductCategory>().CreateAsync(productCategory);
+                        var productCategory = new ProductCategory
+                        {
+                            ProductId = productId,
+                            CategoryId = categoryId,
+                            CreatedUserId = product.CreatedUserId,
+                            IsActive = true
+                        };
+                        await _uow.GetRepository<ProductCategory>().CreateAsync(productCategory);
+                    }
                 }
 
                 await _uow.SaveChangesAsync();
                 
                 var dto = _mapper.Map<ProductCreateDto>(product);
-                dto.CategoryIds = categoryIds;
-                
                 return new Response<ProductCreateDto>(ResponseType.Success, dto);
             }
             catch (Exception ex)
