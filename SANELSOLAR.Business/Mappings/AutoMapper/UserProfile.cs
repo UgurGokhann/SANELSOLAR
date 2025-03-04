@@ -9,6 +9,7 @@ namespace SANELSOLAR.Business.Mappings.AutoMapper
         public UserProfile()
         {
             // User -> UserDto eşleştirmeleri
+            CreateMap<UserDto, User>().ReverseMap();
             CreateMap<UserLoginDto, User>().ReverseMap();
             CreateMap<UserCreateDto, User>().ReverseMap();
             CreateMap<UserUpdateDto, User>().ReverseMap();

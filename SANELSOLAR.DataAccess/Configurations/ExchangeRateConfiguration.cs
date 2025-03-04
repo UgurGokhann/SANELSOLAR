@@ -8,6 +8,7 @@ namespace SANELSOLAR.DataAccess.Configurations
     {
         public void Configure(EntityTypeBuilder<ExchangeRate> builder)
         {
+            builder.ConfigureBaseEntity();
             builder.HasKey(x => new { x.Date, x.FromCurrency, x.ToCurrency });
             builder.Property(er => er.Rate).HasColumnType("decimal(18,6)").IsRequired();
         }

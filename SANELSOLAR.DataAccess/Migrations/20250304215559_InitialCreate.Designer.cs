@@ -12,7 +12,7 @@ using SANELSOLAR.DataAccess.Context;
 namespace SANELSOLAR.DataAccess.Migrations
 {
     [DbContext(typeof(SanelSolarContext))]
-    [Migration("20250304125516_InitialCreate")]
+    [Migration("20250304215559_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -33,10 +33,12 @@ namespace SANELSOLAR.DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("CreatedUserId")
+                    b.Property<int?>("CreatedUserId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -45,17 +47,21 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("UpdatedUserId")
+                    b.Property<int?>("UpdatedUserId")
                         .HasColumnType("int");
 
                     b.HasKey("CategoryId");
@@ -76,10 +82,12 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("CreatedUserId")
+                    b.Property<int?>("CreatedUserId")
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
@@ -98,7 +106,9 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Lastname")
                         .IsRequired()
@@ -110,10 +120,12 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("UpdatedUserId")
+                    b.Property<int?>("UpdatedUserId")
                         .HasColumnType("int");
 
                     b.HasKey("CustomerId");
@@ -132,22 +144,28 @@ namespace SANELSOLAR.DataAccess.Migrations
                     b.Property<string>("ToCurrency")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("CreatedUserId")
+                    b.Property<int?>("CreatedUserId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<decimal>("Rate")
                         .HasColumnType("decimal(18,6)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("UpdatedUserId")
+                    b.Property<int?>("UpdatedUserId")
                         .HasColumnType("int");
 
                     b.HasKey("Date", "FromCurrency", "ToCurrency");
@@ -163,10 +181,12 @@ namespace SANELSOLAR.DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfferId"));
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("CreatedUserId")
+                    b.Property<int?>("CreatedUserId")
                         .HasColumnType("int");
 
                     b.Property<int>("CustomerId")
@@ -176,7 +196,9 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Notes")
                         .IsRequired()
@@ -197,10 +219,12 @@ namespace SANELSOLAR.DataAccess.Migrations
                     b.Property<decimal>("TotalAmountUSD")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("UpdatedUserId")
+                    b.Property<int?>("UpdatedUserId")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")
@@ -226,14 +250,18 @@ namespace SANELSOLAR.DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfferItemId"));
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("CreatedUserId")
+                    b.Property<int?>("CreatedUserId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<int>("OfferId")
                         .HasColumnType("int");
@@ -253,10 +281,12 @@ namespace SANELSOLAR.DataAccess.Migrations
                     b.Property<decimal>("UnitPriceUSD")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("UpdatedUserId")
+                    b.Property<int?>("UpdatedUserId")
                         .HasColumnType("int");
 
                     b.HasKey("OfferItemId");
@@ -276,10 +306,12 @@ namespace SANELSOLAR.DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("CreatedUserId")
+                    b.Property<int?>("CreatedUserId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -288,7 +320,9 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -299,10 +333,12 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("UpdatedUserId")
+                    b.Property<int?>("UpdatedUserId")
                         .HasColumnType("int");
 
                     b.HasKey("ProductId");
@@ -318,10 +354,10 @@ namespace SANELSOLAR.DataAccess.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CreatedUserId")
+                    b.Property<int?>("CreatedUserId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
@@ -330,10 +366,10 @@ namespace SANELSOLAR.DataAccess.Migrations
                     b.Property<int>("ProductCategoryId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("UpdatedUserId")
+                    b.Property<int?>("UpdatedUserId")
                         .HasColumnType("int");
 
                     b.HasKey("ProductId", "CategoryId");
@@ -356,10 +392,12 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("CreatedUserId")
+                    b.Property<int?>("CreatedUserId")
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
@@ -368,12 +406,14 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
@@ -385,10 +425,12 @@ namespace SANELSOLAR.DataAccess.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("UpdatedUserId")
+                    b.Property<int?>("UpdatedUserId")
                         .HasColumnType("int");
 
                     b.Property<string>("Username")

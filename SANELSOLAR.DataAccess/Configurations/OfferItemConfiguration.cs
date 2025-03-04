@@ -8,6 +8,7 @@ namespace SANELSOLAR.DataAccess.Configurations
     {
         public void Configure(EntityTypeBuilder<OfferItem> builder)
         {
+            builder.ConfigureBaseEntity();
             builder.HasKey(x => x.OfferItemId);
             builder.Property(oi => oi.Quantity).IsRequired();
             builder.Property(oi => oi.UnitPriceUSD).HasColumnType("decimal(18,2)");
