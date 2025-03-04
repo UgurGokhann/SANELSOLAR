@@ -1,0 +1,104 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "./Navbar.css";
+
+const Navbar = () => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  return (
+    <nav className="navbar">
+      <div className="container navbar-container">
+        <Link to="/" className="navbar-logo">
+          SANEL SOLAR
+        </Link>
+
+        <button className="navbar-toggle" onClick={toggleMenu}>
+          <span className="navbar-toggle-icon"></span>
+        </button>
+
+        <div className={`navbar-menu ${isMenuOpen ? "active" : ""}`}>
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <Link
+                to="/"
+                className="nav-link"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Ana Sayfa
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                to="/products"
+                className="nav-link"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Ürünler
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                to="/categories"
+                className="nav-link"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Kategoriler
+              </Link>
+            </li>
+          </ul>
+
+          <div className="navbar-auth">
+            {isAuthenticated ? (
+              <>
+                <span className="navbar-username">
+                  Merhaba, {user?.username}
+                </span>
+                <Link
+                  to="/profile"
+                  className="nav-link"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Profil
+                </Link>
+                <button className="btn btn-secondary" onClick={handleLogout}>
+                  Çıkış
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="nav-link"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Giriş
+                </Link>
+                <Link
+                  to="/register"
+                  className="btn btn-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Kayıt Ol
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
