@@ -46,6 +46,8 @@ namespace SANELSOLAR.Business.DependencyResolvers
 
             // Services
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ICategoryService, CategoryService>();
 
             // AutoMapper
             services.AddAutoMapper(config =>
