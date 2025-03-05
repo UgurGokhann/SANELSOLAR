@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SANELSOLAR.DataAccess.Context;
 
@@ -11,9 +12,11 @@ using SANELSOLAR.DataAccess.Context;
 namespace SANELSOLAR.DataAccess.Migrations
 {
     [DbContext(typeof(SanelSolarContext))]
-    partial class SanelSolarContextModelSnapshot : ModelSnapshot
+    [Migration("20250305135028_UpdateUserEntity_AddNameFields_RemovePhoneAddress")]
+    partial class UpdateUserEntity_AddNameFields_RemovePhoneAddress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

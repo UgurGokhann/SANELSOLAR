@@ -10,8 +10,8 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    phone: "",
-    address: "",
+    firstName: "",
+    lastName: "",
   });
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
@@ -96,8 +96,8 @@ const Register = () => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        phone: formData.phone,
-        address: formData.address,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         role: "User", // Varsayılan rol
       };
 
@@ -178,27 +178,27 @@ const Register = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="phone">Telefon (İsteğe Bağlı)</label>
+              <label htmlFor="firstName">Ad</label>
               <input
-                type="tel"
-                id="phone"
-                name="phone"
+                type="text"
+                id="firstName"
+                name="firstName"
                 className="form-control"
-                value={formData.phone}
+                value={formData.firstName}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="address">Adres (İsteğe Bağlı)</label>
-              <textarea
-                id="address"
-                name="address"
+              <label htmlFor="lastName">Soyad</label>
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
                 className="form-control"
-                value={formData.address}
+                value={formData.lastName}
                 onChange={handleChange}
-                rows="3"
-              ></textarea>
+              />
             </div>
 
             <button

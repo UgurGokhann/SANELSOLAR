@@ -17,6 +17,19 @@ const Navbar = () => {
     navigate("/login");
   };
 
+  // Get user's full name or username as fallback
+  const getUserDisplayName = () => {
+    if (!user) return "";
+    
+    // If firstName and lastName exist, use them
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    
+    // Otherwise, use username as fallback
+    return user.username;
+  };
+
   return (
     <nav className="navbar">
       <div className="container navbar-container">
@@ -63,7 +76,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <span className="navbar-username">
-                  Merhaba, {user?.username}
+                  Merhaba, {getUserDisplayName()}
                 </span>
                 <Link
                   to="/profile"

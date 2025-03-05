@@ -21,17 +21,34 @@ const authService = {
 
   getCurrentUser: async () => {
     try {
-      // Token'dan kullanıcı adını çıkar (JWT decode)
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token bulunamadı");
 
-      // Token'ı decode et ve kullanıcı bilgilerini al
-      // Not: Gerçek uygulamada JWT decode işlemi yapılmalı
-      // Şimdilik basit bir çözüm olarak kullanıcı adını token'dan çıkarıyoruz
-      const username = parseJwt(token).sub;
-
-      const response = await api.get(`/users/by-username/${username}`);
-      return response.data;
+      try {
+        // API'den kullanıcı bilgilerini al
+        const response = await api.get(`/users/current`);
+        return response.data;
+      } catch (apiError) {
+        // API çağrısı başarısız olursa, token'dan çıkarılan bilgileri kullan
+        console.warn("API'den kullanıcı bilgileri alınamadı, token bilgileri kullanılıyor");
+        
+        // Token'ı decode et ve kullanıcı bilgilerini al
+        const decodedToken = parseJwt(token);
+        
+        if (!decodedToken || !decodedToken.sub) {
+          throw new Error("Geçersiz token");
+        }
+        
+        // Token'dan temel kullanıcı bilgilerini oluştur
+        return {
+          userId: decodedToken.nameid || decodedToken.userId || decodedToken.sub,
+          username: decodedToken.sub,
+          firstName: decodedToken.given_name || "",
+          lastName: decodedToken.family_name || "",
+          email: decodedToken.email || "",
+          // Diğer gerekli kullanıcı bilgileri
+        };
+      }
     } catch (error) {
       throw handleError(error);
     }
