@@ -58,7 +58,14 @@ namespace SANELSOLAR.DataAccess.Repositories
 
         public void Remove(T entity)
         {
-            _context.Set<T>().Remove(entity);
+            if (entity is BaseEntity baseEntity)
+            {
+                baseEntity.IsActive = false;
+                baseEntity.UpdatedDate = DateTime.UtcNow;
+                _context.Update(entity);
+            }
+            else
+                _context.Set<T>().Remove(entity);
         }
 
         public async Task CreateAsync(T entity)

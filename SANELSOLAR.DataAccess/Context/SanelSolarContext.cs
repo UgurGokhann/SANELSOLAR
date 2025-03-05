@@ -27,6 +27,24 @@ namespace SANELSOLAR.DataAccess.Context
 
             modelBuilder.Entity<ProductCategory>()
             .HasKey(pc => new { pc.ProductId, pc.CategoryId });
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+                {
+                    var method = typeof(SanelSolarContext)
+                        .GetMethod(nameof(ApplyGlobalFilters), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                        ?.MakeGenericMethod(entityType.ClrType);
+
+                    method?.Invoke(null, new object[] { modelBuilder });
+                }
+            }
+
+            base.OnModelCreating(modelBuilder);
+        }
+        private static void ApplyGlobalFilters<T>(ModelBuilder modelBuilder) where T : BaseEntity
+        {
+            modelBuilder.Entity<T>().HasQueryFilter(e => e.IsActive);
         }
 
         public DbSet<User> Users { get; set; }
@@ -39,4 +57,5 @@ namespace SANELSOLAR.DataAccess.Context
         public DbSet<ExchangeRate> ExchangeRates { get; set; }
 
     }
+
 }
