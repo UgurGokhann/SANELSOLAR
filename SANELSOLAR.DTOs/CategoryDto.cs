@@ -10,6 +10,7 @@ namespace SANELSOLAR.DTOs
     {
         public string Name { get; set; }
         public string Description { get; set; }
+        public List<ProductCreateDto> Products { get; set; }
     }
 
     // DTO for updating an existing category
