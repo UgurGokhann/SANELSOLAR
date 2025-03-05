@@ -30,10 +30,13 @@ namespace SANELSOLAR.Business.Services
 
                 var claims = new List<Claim>
                 {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Username),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                    new Claim("username", user.Username)
+                    new Claim("username", user.Username),
+                    new Claim("userId", user.UserId.ToString()),
+                    new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? ""),
+                    new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? "")
                 };
 
                 // Add roles to claims
@@ -113,9 +116,14 @@ namespace SANELSOLAR.Business.Services
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = int.Parse(jwtToken.Claims.First(x => x.Type == JwtRegisteredClaimNames.Sub).Value);
-
-                return userId;
+                var userIdClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "userId");
+                
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return userId;
+                }
+                
+                return null;
             }
             catch
             {

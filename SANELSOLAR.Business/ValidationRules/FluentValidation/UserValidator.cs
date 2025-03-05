@@ -26,10 +26,9 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
             RuleFor(x => x.Password).NotEmpty().WithMessage("Şifre boş olamaz");
             RuleFor(x => x.Password).MinimumLength(6).WithMessage("Şifre en az 6 karakter olmalıdır");
             
-            RuleFor(x => x.Phone).NotEmpty().WithMessage("Telefon numarası boş olamaz");
-            RuleFor(x => x.Phone).Matches(@"^\+?[0-9]{10,15}$").WithMessage("Geçerli bir telefon numarası giriniz");
+            RuleFor(x => x.FirstName).MaximumLength(50).WithMessage("Ad en fazla 50 karakter olabilir");
             
-            RuleFor(x => x.Address).MaximumLength(250).WithMessage("Adres en fazla 250 karakter olabilir");
+            RuleFor(x => x.LastName).MaximumLength(50).WithMessage("Soyad en fazla 50 karakter olabilir");
             
             RuleFor(x => x.Role).NotEmpty().WithMessage("Kullanıcı rolü boş olamaz");
         }
@@ -48,10 +47,9 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
             RuleFor(x => x.Email).NotEmpty().WithMessage("E-posta adresi boş olamaz");
             RuleFor(x => x.Email).EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz");
             
-            RuleFor(x => x.Phone).NotEmpty().WithMessage("Telefon numarası boş olamaz");
-            RuleFor(x => x.Phone).Matches(@"^\+?[0-9]{10,15}$").WithMessage("Geçerli bir telefon numarası giriniz");
+            RuleFor(x => x.FirstName).MaximumLength(50).WithMessage("Ad en fazla 50 karakter olabilir");
             
-            RuleFor(x => x.Address).MaximumLength(250).WithMessage("Adres en fazla 250 karakter olabilir");
+            RuleFor(x => x.LastName).MaximumLength(50).WithMessage("Soyad en fazla 50 karakter olabilir");
             
             RuleFor(x => x.Role).NotEmpty().WithMessage("Kullanıcı rolü boş olamaz");
         }

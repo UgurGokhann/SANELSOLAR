@@ -13,8 +13,8 @@ const Profile = () => {
     userId: "",
     username: "",
     email: "",
-    phone: "",
-    address: "",
+    firstName: "",
+    lastName: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -39,8 +39,8 @@ const Profile = () => {
       userId: user.userId,
       username: user.username || "",
       email: user.email || "",
-      phone: user.phone || "",
-      address: user.address || "",
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
     });
 
     setPasswordData({
@@ -218,27 +218,27 @@ const Profile = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="phone">Telefon</label>
+                <label htmlFor="firstName">Ad</label>
                 <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
+                  type="text"
+                  id="firstName"
+                  name="firstName"
                   className="form-control"
-                  value={profileData.phone}
+                  value={profileData.firstName}
                   onChange={handleProfileChange}
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="address">Adres</label>
-                <textarea
-                  id="address"
-                  name="address"
+                <label htmlFor="lastName">Soyad</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
                   className="form-control"
-                  value={profileData.address}
+                  value={profileData.lastName}
                   onChange={handleProfileChange}
-                  rows="3"
-                ></textarea>
+                />
               </div>
 
               <button

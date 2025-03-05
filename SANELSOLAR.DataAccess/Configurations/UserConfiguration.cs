@@ -15,11 +15,18 @@ namespace SANELSOLAR.DataAccess.Configurations
         {
             builder.ConfigureBaseEntity();
             builder.HasKey(x => x.UserId);
+            
             builder.Property(u => u.Username).IsRequired().HasMaxLength(50);
+            builder.HasIndex(u => u.Username).IsUnique();
+            
             builder.Property(u => u.Password).IsRequired().HasMaxLength(100);
+            
             builder.Property(u => u.Email).IsRequired().HasMaxLength(50);
-            builder.Property(u => u.Phone).IsRequired().HasMaxLength(50);
-            builder.Property(u => u.Address).IsRequired().HasMaxLength(100);
+            builder.HasIndex(u => u.Email).IsUnique();
+            
+            builder.Property(u => u.FirstName).HasMaxLength(50);
+            builder.Property(u => u.LastName).HasMaxLength(50);
+            
             builder.Property(u => u.Role).IsRequired().HasMaxLength(50);
         }
     }

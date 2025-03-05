@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SANELSOLAR.Business.Interfaces;
 using SANELSOLAR.Common;
 using SANELSOLAR.DTOs;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SANELSOLAR.API.Controllers
@@ -75,6 +76,26 @@ namespace SANELSOLAR.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetByUsername(string username)
         {
+            var response = await _userService.GetUserByUsernameAsync(username);
+            return response.ResponseType switch
+            {
+                ResponseType.Success => Ok(response.Data),
+                ResponseType.NotFound => NotFound(response.Message),
+                _ => BadRequest(response.Message)
+            };
+        }
+
+        [HttpGet("current")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var username = User.FindFirst(ClaimTypes.Name)?.Value ?? User.FindFirst("username")?.Value;
+            
+            if (string.IsNullOrEmpty(username))
+            {
+                return BadRequest("Kullanıcı bilgisi bulunamadı");
+            }
+            
             var response = await _userService.GetUserByUsernameAsync(username);
             return response.ResponseType switch
             {
