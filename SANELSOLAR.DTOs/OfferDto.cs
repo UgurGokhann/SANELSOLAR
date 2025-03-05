@@ -12,7 +12,7 @@ namespace SANELSOLAR.DTOs
     }
 
     // DTO for updating an existing offer item
-    public class OfferItemUpdateDto : UpdateDTO
+    public class OfferItemUpdateDto : BaseDTO
     {
         public int OfferItemId { get; set; }
         public int ProductId { get; set; }
@@ -31,7 +31,7 @@ namespace SANELSOLAR.DTOs
     }
 
     // DTO for updating an existing offer
-    public class OfferUpdateDto : UpdateDTO
+    public class OfferUpdateDto : BaseDTO
     {
         public int OfferId { get; set; }
         public int CustomerId { get; set; }

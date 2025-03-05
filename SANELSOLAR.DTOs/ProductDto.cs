@@ -13,7 +13,7 @@ namespace SANELSOLAR.DTOs
     }
 
     // DTO for updating an existing produc
-    public class ProductUpdateDto : UpdateDTO
+    public class ProductUpdateDto : BaseDTO
     {
         public int ProductId { get; set; }
         public string Name { get; set; }

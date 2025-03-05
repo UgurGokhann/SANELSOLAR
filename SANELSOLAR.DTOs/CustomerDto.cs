@@ -14,7 +14,7 @@ namespace SANELSOLAR.DTOs
     }
 
     // DTO for updating an existing customer
-    public class CustomerUpdateDto : UpdateDTO
+    public class CustomerUpdateDto : BaseDTO
     {
         public int CustomerId { get; set; }
         public string Firstname { get; set; }

@@ -12,6 +12,10 @@ const categoryService = {
 
   getCategoryById: async (id) => {
     try {
+      if (!id) {
+        throw new Error("Kategori ID bulunamadı!");
+      }
+      
       const response = await api.get(`/categories/${id}`);
       return response.data;
     } catch (error) {
@@ -22,6 +26,20 @@ const categoryService = {
   getCategoriesWithProducts: async () => {
     try {
       const response = await api.get("/categories/with-products");
+      
+      // Gelen verileri kontrol et ve gerekirse düzelt
+      if (Array.isArray(response.data)) {
+        const processedData = response.data.map(category => {
+          // Eğer categoryId yoksa ve id varsa, categoryId ekle
+          if (!category.categoryId && category.id) {
+            return { ...category, categoryId: category.id };
+          }
+          return category;
+        });
+        
+        return processedData;
+      }
+      
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -33,6 +51,20 @@ const categoryService = {
       const response = await api.get("/categories/search", {
         params: { term },
       });
+      
+      // Gelen verileri kontrol et ve gerekirse düzelt
+      if (Array.isArray(response.data)) {
+        const processedData = response.data.map(category => {
+          // Eğer categoryId yoksa ve id varsa, categoryId ekle
+          if (!category.categoryId && category.id) {
+            return { ...category, categoryId: category.id };
+          }
+          return category;
+        });
+        
+        return processedData;
+      }
+      
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -50,21 +82,35 @@ const categoryService = {
 
   updateCategory: async (categoryData) => {
     try {
+      if (!categoryData || !categoryData.categoryId) {
+        throw new Error("Kategori ID bulunamadı!");
+      }
+      
+      // URL'de ve request body'de aynı ID'yi kullan
+      const categoryId = categoryData.categoryId;
+      
       const response = await api.put(
-        `/categories/${categoryData.categoryId}`,
+        `/categories/${categoryId}`,
         categoryData
       );
       return response.data;
     } catch (error) {
+      console.error("Kategori güncelleme hatası:", error);
       throw handleError(error);
     }
   },
 
   deleteCategory: async (id) => {
     try {
+      if (!id) {
+        throw new Error("Kategori ID bulunamadı!");
+      }
+      
+      
       await api.delete(`/categories/${id}`);
       return true;
     } catch (error) {
+      console.error("Kategori silme hatası:", error);
       throw handleError(error);
     }
   },
