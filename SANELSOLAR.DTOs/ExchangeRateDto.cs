@@ -12,7 +12,7 @@ namespace SANELSOLAR.DTOs
     }
 
     // DTO for updating an existing exchange rate
-    public class ExchangeRateUpdateDto : UpdateDTO
+    public class ExchangeRateUpdateDto : BaseDTO
     {
         public int ExchangeRateId { get; set; }
         public DateTime Date { get; set; }

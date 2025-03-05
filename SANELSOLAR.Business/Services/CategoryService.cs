@@ -45,6 +45,7 @@ namespace SANELSOLAR.Business.Services
                     if (!string.IsNullOrEmpty(category.Name))
                         category.Name = category.Name.ToUpper();
                     
+                    // Description alanı null olabilir, sadece dolu olduğunda büyük harfe dönüştür
                     if (!string.IsNullOrEmpty(category.Description))
                         category.Description = category.Description.ToUpper();
                     
@@ -90,6 +91,7 @@ namespace SANELSOLAR.Business.Services
                     if (!string.IsNullOrEmpty(entity.Name))
                         entity.Name = entity.Name.ToUpper();
                     
+                    // Description alanı null olabilir, sadece dolu olduğunda büyük harfe dönüştür
                     if (!string.IsNullOrEmpty(entity.Description))
                         entity.Description = entity.Description.ToUpper();
                     
@@ -120,7 +122,7 @@ namespace SANELSOLAR.Business.Services
             }
         }
 
-        public async Task<IResponse<List<CategoryCreateDto>>> GetCategoriesWithProductsAsync()
+        public async Task<IResponse<List<CategoryListDto>>> GetCategoriesWithProductsAsync()
         {
             try
             {
@@ -129,7 +131,7 @@ namespace SANELSOLAR.Business.Services
                 
                 if (categories == null || !categories.Any())
                 {
-                    return new Response<List<CategoryCreateDto>>(ResponseType.NotFound, "Kategori bulunamadı");
+                    return new Response<List<CategoryListDto>>(ResponseType.NotFound, "Kategori bulunamadı");
                 }
 
                 // Get all product categories
@@ -143,23 +145,33 @@ namespace SANELSOLAR.Business.Services
                     .GetAllAsync(p => productIds.Contains(p.ProductId) && p.IsActive);
                 
                 // Map categories to DTOs
-                var categoryDtos = _mapper.Map<List<CategoryCreateDto>>(categories);
+                var categoryDtos = _mapper.Map<List<CategoryListDto>>(categories);
                 
-                return new Response<List<CategoryCreateDto>>(ResponseType.Success, categoryDtos);
+                return new Response<List<CategoryListDto>>(ResponseType.Success, categoryDtos);
             }
             catch (Exception ex)
             {
-                return new Response<List<CategoryCreateDto>>(ResponseType.Error, $"Kategoriler getirilirken bir hata meydana geldi: {ex.Message}");
+                return new Response<List<CategoryListDto>>(ResponseType.Error, $"Kategoriler getirilirken bir hata meydana geldi: {ex.Message}");
             }
         }
 
-        public async Task<IResponse<List<CategoryCreateDto>>> SearchCategoriesAsync(string searchTerm)
+        public async Task<IResponse<List<CategoryListDto>>> SearchCategoriesAsync(string searchTerm)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(searchTerm))
                 {
-                    return await GetAllAsync();
+                    var allCategories = await _uow.GetRepository<Category>().GetAllAsync();
+
+                    if (allCategories == null || !allCategories.Any())
+                    {
+                        return new Response<List<CategoryListDto>>(ResponseType.NotFound, "Kategori bulunamadı");
+                    }
+
+                    // Map categories to CategoryListDto
+                    var allCategoryDtos = _mapper.Map<List<CategoryListDto>>(allCategories);
+
+                    return new Response<List<CategoryListDto>>(ResponseType.Success, allCategoryDtos);
                 }
 
                 // Convert search term to uppercase for case-insensitive search
@@ -170,16 +182,19 @@ namespace SANELSOLAR.Business.Services
 
                 if (categories == null || !categories.Any())
                 {
-                    return new Response<List<CategoryCreateDto>>(ResponseType.NotFound, $"'{searchTerm}' ile eşleşen kategori bulunamadı");
+                    return new Response<List<CategoryListDto>>(ResponseType.NotFound, $"'{searchTerm}' ile eşleşen kategori bulunamadı");
                 }
 
-                var categoryDtos = _mapper.Map<List<CategoryCreateDto>>(categories);
-                return new Response<List<CategoryCreateDto>>(ResponseType.Success, categoryDtos);
+                var categoryDtos = _mapper.Map<List<CategoryListDto>>(categories);
+                return new Response<List<CategoryListDto>>(ResponseType.Success, categoryDtos);
             }
             catch (Exception ex)
             {
-                return new Response<List<CategoryCreateDto>>(ResponseType.Error, $"Kategoriler aranırken bir hata meydana geldi: {ex.Message}");
+                return new Response<List<CategoryListDto>>(ResponseType.Error, $"Kategoriler aranırken bir hata meydana geldi: {ex.Message}");
             }
         }
+
+        
+        
     }
 } 

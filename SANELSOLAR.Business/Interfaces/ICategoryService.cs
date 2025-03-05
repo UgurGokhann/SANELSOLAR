@@ -10,7 +10,7 @@ namespace SANELSOLAR.Business.Interfaces
     {
         Task<IResponse<CategoryCreateDto>> CreateCategoryAsync(CategoryCreateDto dto);
         Task<IResponse<CategoryUpdateDto>> UpdateCategoryAsync(CategoryUpdateDto dto);
-        Task<IResponse<List<CategoryCreateDto>>> GetCategoriesWithProductsAsync();
-        Task<IResponse<List<CategoryCreateDto>>> SearchCategoriesAsync(string searchTerm);
+        Task<IResponse<List<CategoryListDto>>> GetCategoriesWithProductsAsync();
+        Task<IResponse<List<CategoryListDto>>> SearchCategoriesAsync(string searchTerm);
     }
 } 

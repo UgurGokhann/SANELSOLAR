@@ -6,6 +6,8 @@ namespace SANELSOLAR.DTOs
     {
         public DateTime? CreatedDate { get; set; }
         public int? CreatedUserId { get; set; }
+        public int? UpdatedUserId { get; set; }
+        public DateTime? UpdatedDate { get; set; }
         public bool IsActive { get; set; } = true;
     }
 } 

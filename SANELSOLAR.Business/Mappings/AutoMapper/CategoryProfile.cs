@@ -10,6 +10,7 @@ namespace SANELSOLAR.Business.Mappings.AutoMapper
         {
             CreateMap<Category, CategoryCreateDto>().ReverseMap();
             CreateMap<Category, CategoryUpdateDto>().ReverseMap();
+            CreateMap<Category, CategoryListDto>().ReverseMap();
         }
     }
 } 

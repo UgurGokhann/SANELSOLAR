@@ -34,7 +34,7 @@ namespace SANELSOLAR.DTOs
     }
 
     // DTO for updating an existing user
-    public class UserUpdateDto : UpdateDTO
+    public class UserUpdateDto : BaseDTO
     {
         public int UserId { get; set; }
         public string Username { get; set; }
