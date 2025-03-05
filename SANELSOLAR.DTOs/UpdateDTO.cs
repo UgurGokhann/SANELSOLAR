@@ -8,8 +8,8 @@ namespace SANELSOLAR.DTOs
 {
     public class UpdateDTO
     {
-        public int UpdatedUserId { get; set; }
-        public DateTime UpdatedDate{ get; set; }
-        public bool IsActive { get; set; }
+        public int? UpdatedUserId { get; set; }
+        public DateTime? UpdatedDate { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }
