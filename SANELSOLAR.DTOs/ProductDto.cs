@@ -20,5 +20,16 @@ namespace SANELSOLAR.DTOs
         public string Description { get; set; }
         public decimal PriceUSD { get; set; }
         public List<int> CategoryIds { get; set; }
+        public List<CategoryListDto> Categories { get; set; }
+    }
+    
+    // DTO for listing products with categories
+    public class ProductListDto : BaseDTO
+    {
+        public int ProductId { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public decimal PriceUSD { get; set; }
+        public List<CategoryListDto> Categories { get; set; }
     }
 } 

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace SANELSOLAR.Business.Services
 {
-    public class CategoryService : Service<CategoryCreateDto, CategoryUpdateDto, CategoryCreateDto, Category>, ICategoryService
+    public class CategoryService : Service<CategoryCreateDto, CategoryUpdateDto, CategoryListDto, Category>, ICategoryService
     {
         private readonly IUow _uow;
         private readonly IMapper _mapper;
