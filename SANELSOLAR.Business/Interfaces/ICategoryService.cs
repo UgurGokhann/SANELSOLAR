@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SANELSOLAR.Business.Interfaces
 {
-    public interface ICategoryService : IService<CategoryCreateDto, CategoryUpdateDto, CategoryCreateDto, Category>
+    public interface ICategoryService : IService<CategoryCreateDto, CategoryUpdateDto, CategoryListDto, Category>
     {
         Task<IResponse<CategoryCreateDto>> CreateCategoryAsync(CategoryCreateDto dto);
         Task<IResponse<CategoryUpdateDto>> UpdateCategoryAsync(CategoryUpdateDto dto);

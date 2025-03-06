@@ -23,7 +23,7 @@ namespace SANELSOLAR.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
-            var response = await _productService.GetAllAsync();
+            var response = await _productService.GetAllProductsWithCategoriesAsync();
             return response.ResponseType switch
             {
                 ResponseType.Success => Ok(response.Data),
@@ -36,7 +36,7 @@ namespace SANELSOLAR.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
-            var response = await _productService.GetByIdAsync(id);
+            var response = await _productService.GetProductByIdWithCategoriesAsync(id);
             return response.ResponseType switch
             {
                 ResponseType.Success => Ok(response.Data),
@@ -62,7 +62,7 @@ namespace SANELSOLAR.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Search([FromQuery] string term)
         {
-            var response = await _productService.SearchProductsAsync(term);
+            var response = await _productService.SearchProductsWithCategoriesAsync(term);
             return response.ResponseType switch
             {
                 ResponseType.Success => Ok(response.Data),
