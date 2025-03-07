@@ -170,7 +170,7 @@ namespace SANELSOLAR.Business.Services
 
                 if (productCategories == null || !productCategories.Any())
                 {
-                    return new Response<List<ProductListDto>>(ResponseType.NotFound, "Bu kategoriye ait ürün bulunamadı");
+                    return new Response<List<ProductListDto>>(ResponseType.Success, new List<ProductListDto>());
                 }
 
                 var productIds = productCategories.Select(x => x.ProductId).ToList();
@@ -185,7 +185,7 @@ namespace SANELSOLAR.Business.Services
 
                 if (productsWithCategories == null || !productsWithCategories.Any())
                 {
-                    return new Response<List<ProductListDto>>(ResponseType.NotFound, "Bu kategoriye ait ürün bulunamadı");
+                    return new Response<List<ProductListDto>>(ResponseType.Success, new List<ProductListDto>());
                 }
 
                 var dtos = _mapper.Map<List<ProductListDto>>(productsWithCategories);
@@ -258,7 +258,7 @@ namespace SANELSOLAR.Business.Services
 
                 if (productsWithCategories == null || !productsWithCategories.Any())
                 {
-                    return new Response<List<ProductListDto>>(ResponseType.NotFound, "Ürün bulunamadı");
+                    return new Response<List<ProductListDto>>(ResponseType.Success, new List<ProductListDto>());
                 }
 
                 var dtos = _mapper.Map<List<ProductListDto>>(productsWithCategories);

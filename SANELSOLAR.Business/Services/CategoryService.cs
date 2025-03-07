@@ -131,7 +131,7 @@ namespace SANELSOLAR.Business.Services
                 
                 if (categories == null || !categories.Any())
                 {
-                    return new Response<List<CategoryListDto>>(ResponseType.NotFound, "Kategori bulunamadı");
+                    return new Response<List<CategoryListDto>>(ResponseType.Success, new List<CategoryListDto>());
                 }
 
                 // Get all product categories
