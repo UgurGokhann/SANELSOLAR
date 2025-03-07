@@ -23,4 +23,16 @@ namespace SANELSOLAR.DTOs
         public string Phone { get; set; }
         public string Address { get; set; }
     }
+
+    // DTO for listing customers
+    public class CustomerListDto : BaseDTO
+    {
+        public int CustomerId { get; set; }
+        public string Firstname { get; set; }
+        public string Lastname { get; set; }
+        public string Fullname { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
+        public string Address { get; set; }
+    }
 } 

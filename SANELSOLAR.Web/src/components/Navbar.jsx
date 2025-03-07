@@ -70,6 +70,15 @@ const Navbar = () => {
                 Kategoriler
               </Link>
             </li>
+            <li className="nav-item">
+              <Link
+                to="/customers"
+                className="nav-link"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Müşteriler
+              </Link>
+            </li>
           </ul>
 
           <div className="navbar-auth">

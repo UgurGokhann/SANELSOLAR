@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Categories from "./pages/Categories";
+import Customers from "./pages/Customers";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -44,6 +45,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Categories />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customers" 
+              element={
+                <ProtectedRoute>
+                  <Customers />
                 </ProtectedRoute>
               } 
             />

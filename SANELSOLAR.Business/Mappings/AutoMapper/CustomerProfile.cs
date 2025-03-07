@@ -9,8 +9,15 @@ namespace SANELSOLAR.Business.Mappings.AutoMapper
         public CustomerProfile()
         {
             // Customer -> CustomerDto eşleştirmeleri
-            CreateMap<CustomerCreateDto, Customer>().ReverseMap();
-            CreateMap<CustomerUpdateDto, Customer>().ReverseMap();
+            CreateMap<CustomerCreateDto, Customer>()
+                .ForMember(dest => dest.Fullname, opt => opt.MapFrom(src => $"{src.Firstname} {src.Lastname}"))
+                .ReverseMap();
+                
+            CreateMap<CustomerUpdateDto, Customer>()
+                .ForMember(dest => dest.Fullname, opt => opt.MapFrom(src => $"{src.Firstname} {src.Lastname}"))
+                .ReverseMap();
+                
+            CreateMap<Customer, CustomerListDto>().ReverseMap();
         }
     }
 } 
