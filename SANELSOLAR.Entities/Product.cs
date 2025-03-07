@@ -9,6 +9,9 @@ namespace SANELSOLAR.Entities
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal PriceUSD { get; set; }
+        public int Quantity { get; set; }
+        public string Unit { get; set; }
+        public string Brand { get; set; }
 
         // Navigation properties
         public ICollection<ProductCategory> ProductCategories { get; set; }

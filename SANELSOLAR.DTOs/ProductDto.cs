@@ -9,16 +9,22 @@ namespace SANELSOLAR.DTOs
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal PriceUSD { get; set; }
+        public int Quantity { get; set; }
+        public string Unit { get; set; }
+        public string Brand { get; set; }
         public List<int> CategoryIds { get; set; }
     }
 
-    // DTO for updating an existing produc
+    // DTO for updating an existing product
     public class ProductUpdateDto : BaseDTO
     {
         public int ProductId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal PriceUSD { get; set; }
+        public int Quantity { get; set; }
+        public string Unit { get; set; }
+        public string Brand { get; set; }
         public List<int> CategoryIds { get; set; }
         public List<CategoryListDto> Categories { get; set; }
     }
@@ -30,6 +36,9 @@ namespace SANELSOLAR.DTOs
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal PriceUSD { get; set; }
+        public int Quantity { get; set; }
+        public string Unit { get; set; }
+        public string Brand { get; set; }
         public List<CategoryListDto> Categories { get; set; }
     }
 } 

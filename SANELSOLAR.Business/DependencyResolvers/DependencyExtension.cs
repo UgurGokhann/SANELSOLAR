@@ -28,7 +28,7 @@ namespace SANELSOLAR.Business.DependencyResolvers
             // DbContext
             services.AddDbContext<SanelSolarContext>(opt =>
             {
-                opt.UseSqlServer(configuration.GetConnectionString("Local"));
+                opt.UseNpgsql(configuration.GetConnectionString("Local"));
             });
             
             // Unit of Work
