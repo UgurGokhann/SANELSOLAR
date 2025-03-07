@@ -2,29 +2,16 @@ using System;
 
 namespace SANELSOLAR.DTOs
 {
-    // DTO for creating a new exchange rate
-    public class ExchangeRateCreateDto : BaseDTO
+    public class ExchangeRateDto
     {
-        public DateTime Date { get; set; }
-        public string FromCurrency { get; set; }
-        public string ToCurrency { get; set; }
-        public decimal Rate { get; set; }
+        public string CurrencyCode { get; set; }
+        public string CurrencyName { get; set; }
+        public decimal BuyingRate { get; set; }
+        public decimal SellingRate { get; set; }
+        public decimal EffectiveBuyingRate { get; set; }
+        public decimal EffectiveSellingRate { get; set; }
+        public DateTime UpdateDate { get; set; }
     }
 
-    // DTO for updating an existing exchange rate
-    public class ExchangeRateUpdateDto : BaseDTO
-    {
-        public int ExchangeRateId { get; set; }
-        public DateTime Date { get; set; }
-        public string FromCurrency { get; set; }
-        public string ToCurrency { get; set; }
-        public decimal Rate { get; set; }
-    }
 
-    // DTO for getting the latest exchange rate
-    public class LatestExchangeRateRequestDto
-    {
-        public string FromCurrency { get; set; }
-        public string ToCurrency { get; set; }
-    }
 } 

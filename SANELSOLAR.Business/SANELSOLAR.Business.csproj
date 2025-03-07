@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <Folder Include="Mappings\AutoMapper\" />
-    <Folder Include="Services\" />
     <Folder Include="ValidationRules\" />
   </ItemGroup>
 
@@ -26,6 +25,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
   </ItemGroup>
 
 </Project>
