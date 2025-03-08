@@ -1,16 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstrap';
 import "./Navbar.css";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
 
   const handleLogout = () => {
     logout();
@@ -31,95 +27,46 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
-      <div className="container navbar-container">
-        <Link to="/" className="navbar-logo">
+    <BootstrapNavbar bg="light" expand="lg" className="custom-navbar">
+      <Container>
+        <BootstrapNavbar.Brand as={Link} to="/" className="navbar-logo">
           SANEL SOLAR
-        </Link>
-
-        <button className="navbar-toggle" onClick={toggleMenu}>
-          <span className="navbar-toggle-icon"></span>
-        </button>
-
-        <div className={`navbar-menu ${isMenuOpen ? "active" : ""}`}>
-          <ul className="navbar-nav">
-            <li className="nav-item">
-              <Link
-                to="/"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Ana Sayfa
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                to="/products"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Ürünler
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                to="/categories"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Kategoriler
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                to="/customers"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Müşteriler
-              </Link>
-            </li>
-          </ul>
-
-          <div className="navbar-auth">
+        </BootstrapNavbar.Brand>
+        
+        <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
+        
+        <BootstrapNavbar.Collapse id="basic-navbar-nav">
+          <Nav className="me-auto horizontal-nav">
+            <Nav.Link as={Link} to="/" className="nav-link">Ana Sayfa</Nav.Link>
+            <Nav.Link as={Link} to="/products" className="nav-link">Ürünler</Nav.Link>
+            <Nav.Link as={Link} to="/categories" className="nav-link">Kategoriler</Nav.Link>
+            <Nav.Link as={Link} to="/customers" className="nav-link">Müşteriler</Nav.Link>
+            <Nav.Link as={Link} to="/offers" className="nav-link">Teklifler</Nav.Link>
+          </Nav>
+          
+          <Nav className="ms-auto">
             {isAuthenticated ? (
               <>
-                <span className="navbar-username">
+                <span className="navbar-username align-self-center me-2">
                   Merhaba, {getUserDisplayName()}
                 </span>
-                <Link
-                  to="/profile"
-                  className="nav-link"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Profil
-                </Link>
-                <button className="btn btn-secondary" onClick={handleLogout}>
+                <Nav.Link as={Link} to="/profile" className="nav-link">Profil</Nav.Link>
+                <Button variant="secondary" onClick={handleLogout} className="ms-2">
                   Çıkış
-                </button>
+                </Button>
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="nav-link"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Giriş
-                </Link>
-                <Link
-                  to="/register"
-                  className="btn btn-primary"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Nav.Link as={Link} to="/login" className="nav-link">Giriş</Nav.Link>
+                <Nav.Link as={Link} to="/register" className="btn btn-primary ms-2">
                   Kayıt Ol
-                </Link>
+                </Nav.Link>
               </>
             )}
-          </div>
-        </div>
-      </div>
-    </nav>
+          </Nav>
+        </BootstrapNavbar.Collapse>
+      </Container>
+    </BootstrapNavbar>
   );
 };
 

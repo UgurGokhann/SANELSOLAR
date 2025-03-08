@@ -23,6 +23,9 @@ const Products = () => {
     name: "",
     description: "",
     priceUSD: "",
+    quantity: 0,
+    unit: "Adet",
+    brand: "",
     categoryIds: [],
   });
   
@@ -34,6 +37,9 @@ const Products = () => {
     name: "",
     description: "",
     priceUSD: "",
+    quantity: 0,
+    unit: "Adet",
+    brand: "",
     categoryIds: [],
   });
   
@@ -147,24 +153,43 @@ const Products = () => {
 
     if (!formData.name.trim()) {
       errors.name = "Ürün adı gereklidir";
+    } else if (formData.name.length > 50) {
+      errors.name = "Ürün adı 50 karakterden uzun olamaz";
     }
 
-    
+    if (!formData.description.trim()) {
+      errors.description = "Ürün açıklaması gereklidir";
+    } else if (formData.description.length > 100) {
+      errors.description = "Ürün açıklaması 100 karakterden uzun olamaz";
+    }
 
-    if (
-      !formData.priceUSD ||
-      isNaN(formData.priceUSD) ||
-      parseFloat(formData.priceUSD) <= 0
-    ) {
+    if (!formData.priceUSD) {
+      errors.priceUSD = "Fiyat gereklidir";
+    } else if (isNaN(formData.priceUSD) || parseFloat(formData.priceUSD) <= 0) {
       errors.priceUSD = "Geçerli bir fiyat giriniz";
     }
 
-    if (formData.categoryIds.length === 0) {
-      errors.categoryIds = "En az bir kategori seçmelisiniz";
+    if (formData.quantity < 0) {
+      errors.quantity = "Miktar negatif olamaz";
     }
 
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    if (!formData.unit.trim()) {
+      errors.unit = "Birim gereklidir";
+    } else if (formData.unit.length > 20) {
+      errors.unit = "Birim 20 karakterden uzun olamaz";
+    }
+
+    if (!formData.brand.trim()) {
+      errors.brand = "Marka gereklidir";
+    } else if (formData.brand.length > 50) {
+      errors.brand = "Marka 50 karakterden uzun olamaz";
+    }
+
+    if (!formData.categoryIds || formData.categoryIds.length === 0) {
+      errors.categoryIds = "En az bir kategori seçilmelidir";
+    }
+
+    return errors;
   };
 
   // Ürün ekleme formunu gönder
@@ -196,6 +221,9 @@ const Products = () => {
         name: "",
         description: "",
         priceUSD: "",
+        quantity: 0,
+        unit: "Adet",
+        brand: "",
         categoryIds: [],
       });
 
@@ -218,6 +246,9 @@ const Products = () => {
       name: product.name,
       description: product.description,
       priceUSD: product.priceUSD.toString(),
+      quantity: product.quantity,
+      unit: product.unit,
+      brand: product.brand,
       categoryIds: product.categories ? product.categories.map(cat => cat.categoryId) : [],
     });
     setShowEditForm(true);
@@ -416,6 +447,51 @@ const Products = () => {
             </div>
 
             <div className="form-group">
+              <label htmlFor="quantity">Miktar</label>
+              <input
+                type="number"
+                id="quantity"
+                name="quantity"
+                className="form-control"
+                value={newProduct.quantity}
+                onChange={handleProductChange}
+              />
+              {formErrors.quantity && (
+                <div className="error-message">{formErrors.quantity}</div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="unit">Birim</label>
+              <input
+                type="text"
+                id="unit"
+                name="unit"
+                className="form-control"
+                value={newProduct.unit}
+                onChange={handleProductChange}
+              />
+              {formErrors.unit && (
+                <div className="error-message">{formErrors.unit}</div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="brand">Marka</label>
+              <input
+                type="text"
+                id="brand"
+                name="brand"
+                className="form-control"
+                value={newProduct.brand}
+                onChange={handleProductChange}
+              />
+              {formErrors.brand && (
+                <div className="error-message">{formErrors.brand}</div>
+              )}
+            </div>
+
+            <div className="form-group">
               <label>Kategoriler</label>
               <div
                 style={{
@@ -508,6 +584,51 @@ const Products = () => {
             </div>
 
             <div className="form-group">
+              <label htmlFor="edit-quantity">Miktar</label>
+              <input
+                type="number"
+                id="edit-quantity"
+                name="quantity"
+                className="form-control"
+                value={editFormData.quantity}
+                onChange={handleEditFormChange}
+              />
+              {formErrors.quantity && (
+                <div className="error-message">{formErrors.quantity}</div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="edit-unit">Birim</label>
+              <input
+                type="text"
+                id="edit-unit"
+                name="unit"
+                className="form-control"
+                value={editFormData.unit}
+                onChange={handleEditFormChange}
+              />
+              {formErrors.unit && (
+                <div className="error-message">{formErrors.unit}</div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="edit-brand">Marka</label>
+              <input
+                type="text"
+                id="edit-brand"
+                name="brand"
+                className="form-control"
+                value={editFormData.brand}
+                onChange={handleEditFormChange}
+              />
+              {formErrors.brand && (
+                <div className="error-message">{formErrors.brand}</div>
+              )}
+            </div>
+
+            <div className="form-group">
               <label>Kategoriler</label>
               <div
                 style={{
@@ -570,6 +691,10 @@ const Products = () => {
               <div className="product-info">
                 <h3 className="product-title">{product.name}</h3>
                 <p className="product-price">${product.priceUSD.toFixed(2)}</p>
+                <div className="product-details" style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.5rem" }}>
+                  <div><strong>Marka:</strong> {product.brand}</div>
+                  <div><strong>Miktar:</strong> {product.quantity} {product.unit}</div>
+                </div>
                 <div className="product-categories" style={{ fontSize: "0.9rem", color: "#666" }}>
                   <strong>Kategoriler:</strong> {product.categories && product.categories.length > 0 
                     ? product.categories.map(cat => cat.name).join(", ") 

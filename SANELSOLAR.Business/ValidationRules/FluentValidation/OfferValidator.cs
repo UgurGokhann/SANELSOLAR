@@ -4,7 +4,7 @@ using System;
 
 namespace SANELSOLAR.Business.ValidationRules.FluentValidation
 {
-    public class OfferItemCreateDtoValidator : AbstractValidator<OfferItemCreateDto>
+    public class OfferItemCreateDtoValidator : AbstractValidator<CreateOfferItemDto>
     {
         public OfferItemCreateDtoValidator()
         {
@@ -18,7 +18,7 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
         }
     }
 
-    public class OfferItemUpdateDtoValidator : AbstractValidator<OfferItemUpdateDto>
+    public class OfferItemUpdateDtoValidator : AbstractValidator<UpdateOfferItemDto>
     {
         public OfferItemUpdateDtoValidator()
         {
@@ -34,7 +34,7 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
         }
     }
 
-    public class OfferCreateDtoValidator : AbstractValidator<OfferCreateDto>
+    public class OfferCreateDtoValidator : AbstractValidator<CreateOfferDto>
     {
         public OfferCreateDtoValidator()
         {
@@ -53,7 +53,7 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
         }
     }
 
-    public class OfferUpdateDtoValidator : AbstractValidator<OfferUpdateDto>
+    public class OfferUpdateDtoValidator : AbstractValidator<UpdateOfferDto>
     {
         public OfferUpdateDtoValidator()
         {
@@ -75,7 +75,7 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
         }
     }
 
-    public class OfferStatusUpdateDtoValidator : AbstractValidator<OfferStatusUpdateDto>
+    public class OfferStatusUpdateDtoValidator : AbstractValidator<ListOfferDto>
     {
         public OfferStatusUpdateDtoValidator()
         {

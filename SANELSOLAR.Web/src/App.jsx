@@ -6,6 +6,9 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Categories from "./pages/Categories";
 import Customers from "./pages/Customers";
+import Offers from "./pages/Offers";
+import CreateOffer from "./pages/CreateOffer";
+import EditOffer from "./pages/EditOffer";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -53,6 +56,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Customers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/offers" 
+              element={
+                <ProtectedRoute>
+                  <Offers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/offers/new" 
+              element={
+                <ProtectedRoute>
+                  <CreateOffer />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/offers/edit/:id" 
+              element={
+                <ProtectedRoute>
+                  <EditOffer />
                 </ProtectedRoute>
               } 
             />

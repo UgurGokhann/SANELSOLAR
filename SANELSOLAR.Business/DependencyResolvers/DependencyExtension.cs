@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using SANELSOLAR.Business.Interfaces;
 using SANELSOLAR.Business.Mappings.AutoMapper;
 using SANELSOLAR.Business.Services;
+using SANELSOLAR.Business.ValidationRules;
 using SANELSOLAR.Business.ValidationRules.FluentValidation;
 using SANELSOLAR.DataAccess.Context;
 using SANELSOLAR.DataAccess.Interfaces;
@@ -50,15 +51,26 @@ namespace SANELSOLAR.Business.DependencyResolvers
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IExchangeRateService, ExchangeRateService>();
+            services.AddScoped<IOfferService, OfferService>();
+
+
+            services.AddTransient<IValidator<CreateOfferDto>, CreateOfferDtoValidator>();
+            services.AddTransient<IValidator<UpdateOfferDto>, UpdateOfferDtoValidator>();
+            services.AddTransient<IValidator<CreateOfferItemDto>, CreateOfferItemDtoValidator>();
+            services.AddTransient<IValidator<UpdateOfferItemDto>, UpdateOfferItemDtoValidator>();
+
             // AutoMapper
-            services.AddAutoMapper(config =>
+            services.AddAutoMapper(opt =>
             {
-                config.AddProfile(new CategoryProfile());
-                config.AddProfile(new ProductProfile());
-                config.AddProfile(new UserProfile());
-                config.AddProfile(new CustomerProfile());
-                config.AddProfile(new OfferProfile());
-                config.AddProfile(new ExchangeRateProfile());
+                opt.AddProfiles(new List<Profile>
+                {
+                    new UserProfile(),
+                    new ProductProfile(),
+                    new CategoryProfile(),
+                    new CustomerProfile(),
+                    new ExchangeRateProfile(),
+                    new OfferProfile()
+                });
             });
 
             // FluentValidation - Validators
@@ -79,13 +91,6 @@ namespace SANELSOLAR.Business.DependencyResolvers
             // Customer
             services.AddTransient<IValidator<CustomerCreateDto>, CustomerCreateDtoValidator>();
             services.AddTransient<IValidator<CustomerUpdateDto>, CustomerUpdateDtoValidator>();
-            
-            // Offer
-            services.AddTransient<IValidator<OfferItemCreateDto>, OfferItemCreateDtoValidator>();
-            services.AddTransient<IValidator<OfferItemUpdateDto>, OfferItemUpdateDtoValidator>();
-            services.AddTransient<IValidator<OfferCreateDto>, OfferCreateDtoValidator>();
-            services.AddTransient<IValidator<OfferUpdateDto>, OfferUpdateDtoValidator>();
-            services.AddTransient<IValidator<OfferStatusUpdateDto>, OfferStatusUpdateDtoValidator>();
             
         }
     }

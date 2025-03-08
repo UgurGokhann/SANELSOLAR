@@ -80,6 +80,14 @@ const ProductDetail = () => {
               </h2>
 
               <div style={{ marginBottom: "1.5rem" }}>
+                <h3>Ürün Bilgileri</h3>
+                <div style={{ marginTop: "0.5rem" }}>
+                  <p><strong>Marka:</strong> {product.brand}</p>
+                  <p><strong>Miktar:</strong> {product.quantity} {product.unit}</p>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "1.5rem" }}>
                 <h3>Açıklama</h3>
                 <p>{product.description}</p>
               </div>
