@@ -9,6 +9,7 @@ import Customers from "./pages/Customers";
 import Offers from "./pages/Offers";
 import CreateOffer from "./pages/CreateOffer";
 import EditOffer from "./pages/EditOffer";
+import OfferDetail from "./pages/OfferDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -80,6 +81,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <EditOffer />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/offers/:id" 
+              element={
+                <ProtectedRoute>
+                  <OfferDetail />
                 </ProtectedRoute>
               } 
             />
