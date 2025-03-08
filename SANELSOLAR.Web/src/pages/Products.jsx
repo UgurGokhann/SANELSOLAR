@@ -4,7 +4,20 @@ import productService from "../services/productService";
 import categoryService from "../services/categoryService";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
-import "./Home.css"; // Aynı stil dosyasını kullanıyoruz
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Table,
+  Form,
+  Modal,
+  Alert,
+  InputGroup,
+  Spinner,
+} from "react-bootstrap";
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes } from "react-icons/fa";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -18,7 +31,7 @@ const Products = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
 
   // Ürün ekleme formu için state
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
@@ -30,7 +43,7 @@ const Products = () => {
   });
   
   // Ürün güncelleme formu için state
-  const [showEditForm, setShowEditForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editFormData, setEditFormData] = useState({
     productId: "",
@@ -42,6 +55,10 @@ const Products = () => {
     brand: "",
     categoryIds: [],
   });
+  
+  // Ürün silme için state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
   
   const [formErrors, setFormErrors] = useState({});
   const [formSuccess, setFormSuccess] = useState("");
@@ -104,10 +121,28 @@ const Products = () => {
     setSearchTerm(e.target.value);
   };
 
-  // Yeni ürün form değişikliklerini işle
+  const handleSearch = () => {
+    // Mevcut ürünler içinde arama yap
+    if (products.length > 0) {
+      const filtered = products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setFilteredProducts(products);
+  };
+
+  // Ürün ekleme/düzenleme form işlemleri
   const handleProductChange = (e) => {
     const { name, value } = e.target;
-    setNewProduct({ ...newProduct, [name]: value });
+    setNewProduct({
+      ...newProduct,
+      [name]: value,
+    });
 
     // Hata mesajını temizle
     if (formErrors[name]) {
@@ -115,108 +150,91 @@ const Products = () => {
     }
   };
 
-  // Kategori seçimlerini işle
   const handleCategorySelect = (categoryId) => {
     const updatedCategoryIds = [...newProduct.categoryIds];
-
-    if (updatedCategoryIds.includes(categoryId)) {
-      // Kategori zaten seçiliyse, kaldır
       const index = updatedCategoryIds.indexOf(categoryId);
-      updatedCategoryIds.splice(index, 1);
-    } else {
-      // Kategori seçili değilse, ekle
+    
+    if (index === -1) {
+      // Kategori seçilmemişse ekle
       updatedCategoryIds.push(categoryId);
+    } else {
+      // Kategori zaten seçilmişse kaldır
+      updatedCategoryIds.splice(index, 1);
     }
 
-    setNewProduct({ ...newProduct, categoryIds: updatedCategoryIds });
+    setNewProduct({
+      ...newProduct,
+      categoryIds: updatedCategoryIds,
+    });
   };
   
-  // Güncelleme formu için kategori seçimlerini işle
   const handleEditCategorySelect = (categoryId) => {
     const updatedCategoryIds = [...editFormData.categoryIds];
-
-    if (updatedCategoryIds.includes(categoryId)) {
-      // Kategori zaten seçiliyse, kaldır
       const index = updatedCategoryIds.indexOf(categoryId);
-      updatedCategoryIds.splice(index, 1);
-    } else {
-      // Kategori seçili değilse, ekle
+    
+    if (index === -1) {
+      // Kategori seçilmemişse ekle
       updatedCategoryIds.push(categoryId);
+    } else {
+      // Kategori zaten seçilmişse kaldır
+      updatedCategoryIds.splice(index, 1);
     }
 
-    setEditFormData({ ...editFormData, categoryIds: updatedCategoryIds });
+    setEditFormData({
+      ...editFormData,
+      categoryIds: updatedCategoryIds,
+    });
   };
 
-  // Form doğrulama
   const validateProductForm = (formData) => {
     const errors = {};
 
     if (!formData.name.trim()) {
       errors.name = "Ürün adı gereklidir";
-    } else if (formData.name.length > 50) {
-      errors.name = "Ürün adı 50 karakterden uzun olamaz";
     }
 
     if (!formData.description.trim()) {
       errors.description = "Ürün açıklaması gereklidir";
-    } else if (formData.description.length > 100) {
-      errors.description = "Ürün açıklaması 100 karakterden uzun olamaz";
     }
 
-    if (!formData.priceUSD) {
-      errors.priceUSD = "Fiyat gereklidir";
-    } else if (isNaN(formData.priceUSD) || parseFloat(formData.priceUSD) <= 0) {
+    if (!formData.priceUSD || isNaN(formData.priceUSD) || parseFloat(formData.priceUSD) <= 0) {
       errors.priceUSD = "Geçerli bir fiyat giriniz";
     }
 
-    if (formData.quantity < 0) {
-      errors.quantity = "Miktar negatif olamaz";
+    if (formData.quantity === undefined || isNaN(formData.quantity) || parseInt(formData.quantity) < 0) {
+      errors.quantity = "Geçerli bir miktar giriniz";
     }
 
     if (!formData.unit.trim()) {
       errors.unit = "Birim gereklidir";
-    } else if (formData.unit.length > 20) {
-      errors.unit = "Birim 20 karakterden uzun olamaz";
     }
 
     if (!formData.brand.trim()) {
       errors.brand = "Marka gereklidir";
-    } else if (formData.brand.length > 50) {
-      errors.brand = "Marka 50 karakterden uzun olamaz";
     }
 
-    if (!formData.categoryIds || formData.categoryIds.length === 0) {
-      errors.categoryIds = "En az bir kategori seçilmelidir";
+    if (formData.categoryIds.length === 0) {
+      errors.categoryIds = "En az bir kategori seçmelisiniz";
     }
 
-    return errors;
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  // Ürün ekleme formunu gönder
   const handleSubmitProduct = async (e) => {
     e.preventDefault();
 
     if (!validateProductForm(newProduct)) {
-      // Form doğrulama hatalarını toast ile göster
-      Object.values(formErrors).forEach((error) => {
-        if (error) toast.error(error);
-      });
       return;
     }
 
     try {
-      // Fiyatı sayıya dönüştür
-      const productData = {
-        ...newProduct,
-        priceUSD: parseFloat(newProduct.priceUSD),
-      };
+      const response = await productService.createProduct(newProduct);
 
-      const createdProduct = await productService.createProduct(productData);
+      if (response) {
+        toast.success("Ürün başarıyla eklendi");
 
-      // Ürün listesini güncelle
-      setProducts([...products, createdProduct]);
-
-      // Formu temizle
+        // Formu sıfırla
       setNewProduct({
         name: "",
         description: "",
@@ -227,18 +245,19 @@ const Products = () => {
         categoryIds: [],
       });
 
-      // Başarı mesajını toast ile göster
-      toast.success("Ürün başarıyla eklendi");
+        // Ürün listesini güncelle
+        const updatedProducts = await productService.getAllProducts();
+        setProducts(updatedProducts);
 
-      // Form başarıyla gönderildikten sonra formu kapat
-      setShowAddForm(false);
+        // Modalı kapat
+        setShowAddModal(false);
+      }
     } catch (err) {
-      // Hata mesajını toast ile göster
-      toast.error(err.message || "Ürün eklenirken bir hata oluştu");
+      toast.error("Ürün eklenirken bir hata oluştu: " + err.message);
+      console.error("Ürün ekleme hatası:", err);
     }
   };
   
-  // Ürün düzenleme formunu aç
   const handleEditClick = (product) => {
     setEditingProduct(product);
     setEditFormData({
@@ -249,16 +268,17 @@ const Products = () => {
       quantity: product.quantity,
       unit: product.unit,
       brand: product.brand,
-      categoryIds: product.categories ? product.categories.map(cat => cat.categoryId) : [],
+      categoryIds: product.categories.map(cat => cat.categoryId),
     });
-    setShowEditForm(true);
-    setShowAddForm(false); // Ekleme formunu kapat
+    setShowEditModal(true);
   };
   
-  // Düzenleme formu değişikliklerini işle
   const handleEditFormChange = (e) => {
     const { name, value } = e.target;
-    setEditFormData({ ...editFormData, [name]: value });
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
+    });
 
     // Hata mesajını temizle
     if (formErrors[name]) {
@@ -266,466 +286,473 @@ const Products = () => {
     }
   };
   
-  // Ürün güncelleme formunu gönder
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
 
     if (!validateProductForm(editFormData)) {
-      // Form doğrulama hatalarını toast ile göster
-      Object.values(formErrors).forEach((error) => {
-        if (error) toast.error(error);
-      });
       return;
     }
 
     try {
-      // Fiyatı sayıya dönüştür
-      const productData = {
-        ...editFormData,
-        priceUSD: parseFloat(editFormData.priceUSD),
-      };
-
-      const updatedProduct = await productService.updateProduct(productData);
+      const response = await productService.updateProduct(
+        editFormData.productId,
+        editFormData
+      );
+      
+      if (response) {
+        toast.success("Ürün başarıyla güncellendi");
 
       // Ürün listesini güncelle
-      setProducts(products.map(p => 
-        p.productId === updatedProduct.productId ? updatedProduct : p
-      ));
+        const updatedProducts = await productService.getAllProducts();
+        setProducts(updatedProducts);
 
-      // Başarı mesajını toast ile göster
-      toast.success("Ürün başarıyla güncellendi");
-
-      // Form başarıyla gönderildikten sonra formu kapat
-      setShowEditForm(false);
-      setEditingProduct(null);
+        // Modalı kapat
+        setShowEditModal(false);
+      }
     } catch (err) {
-      // Hata mesajını toast ile göster
-      toast.error(err.message || "Ürün güncellenirken bir hata oluştu");
+      toast.error("Ürün güncellenirken bir hata oluştu: " + err.message);
+      console.error("Ürün güncelleme hatası:", err);
     }
   };
   
-  // Ürün silme işlemi
-  const handleDeleteProduct = async (productId) => {
-    if (window.confirm("Bu ürünü silmek istediğinizden emin misiniz?")) {
-      try {
-        await productService.deleteProduct(productId);
-        
-        // Ürün listesini güncelle
-        setProducts(products.filter(p => p.productId !== productId));
-        
-        // Başarı mesajını toast ile göster
-        toast.success("Ürün başarıyla silindi");
-      } catch (err) {
-        // Hata mesajını toast ile göster
-        toast.error(err.message || "Ürün silinirken bir hata oluştu");
-      }
-    }
+  const openDeleteModal = (product) => {
+    setProductToDelete(product);
+    setShowDeleteModal(true);
   };
 
-  if (loading) {
-    return <div className="loading">Yükleniyor...</div>;
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+    
+      try {
+      await productService.deleteProduct(productToDelete.productId);
+      toast.success("Ürün başarıyla silindi");
+        
+        // Ürün listesini güncelle
+      const updatedProducts = await productService.getAllProducts();
+      setProducts(updatedProducts);
+        
+      // Modalı kapat
+      setShowDeleteModal(false);
+      } catch (err) {
+      toast.error("Ürün silinirken bir hata oluştu: " + err.message);
+      console.error("Ürün silme hatası:", err);
   }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
+  };
 
   return (
-    <div className="container">
-      <h1 className="section-title">Ürünler</h1>
+    <Container className="py-4">
+      <Card className="shadow-sm">
+        <Card.Header className="bg-primary text-white">
+          <h4 className="mb-0">Ürün Yönetimi</h4>
+        </Card.Header>
+        <Card.Body>
+          {error && <Alert variant="danger">{error}</Alert>}
 
-      <div className="filters" style={{ marginBottom: "2rem" }}>
-        <h3>Kategoriler</h3>
-        <div
-          style={{
-            display: "flex",
-            gap: "0.5rem",
-            flexWrap: "wrap",
-            marginTop: "1rem",
-          }}
-        >
-          <button
-            className={`btn ${!categoryId ? "btn-primary" : "btn-secondary"}`}
+          <Row className="mb-3">
+            <Col md={6}>
+              <InputGroup>
+                <Form.Control
+                  type="text"
+                  placeholder="Ürün ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                />
+                <Button variant="outline-secondary" onClick={clearSearch}>
+                  <FaTimes />
+                </Button>
+                <Button variant="primary" onClick={handleSearch}>
+                  <FaSearch /> Ara
+                </Button>
+              </InputGroup>
+            </Col>
+            <Col md={6} className="text-end">
+              {isAuthenticated && (
+                <Button variant="success" onClick={() => setShowAddModal(true)}>
+                  <FaPlus /> Yeni Ürün
+                </Button>
+              )}
+            </Col>
+          </Row>
+
+          <Row className="mb-3">
+            <Col>
+              <div className="d-flex flex-wrap gap-2">
+                <Button
+                  variant={!categoryId ? "primary" : "outline-secondary"}
             onClick={() => handleCategoryFilter(null)}
           >
             Tümü
-          </button>
+                </Button>
           {categories.map((category) => (
-            <button
+                  <Button
               key={category.categoryId}
-              className={`btn ${
-                categoryId == category.categoryId
-                  ? "btn-primary"
-                  : "btn-secondary"
-              }`}
+                    variant={categoryId == category.categoryId ? "primary" : "outline-secondary"}
               onClick={() => handleCategoryFilter(category.categoryId)}
             >
               {category.name}
-            </button>
+                  </Button>
           ))}
         </div>
-      </div>
+            </Col>
+          </Row>
 
-      {/* Ürün Arama */}
-      <div className="search-container" style={{ marginBottom: "2rem" }}>
-        <input
-          type="text"
-          placeholder="Ürün adına göre ara..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="form-control"
-          style={{ width: "100%", padding: "0.5rem" }}
-        />
+          {loading ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" variant="primary" />
+              <p className="mt-2">Yükleniyor...</p>
       </div>
-
-      {/* Ürün Ekleme Butonu - Sadece yetkili kullanıcılar görebilir */}
+          ) : filteredProducts.length === 0 ? (
+            <Alert variant="info">
+              Ürün bulunamadı. Yeni ürün eklemek için "Yeni Ürün" butonuna tıklayın.
+            </Alert>
+          ) : (
+            <Table responsive striped hover>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Ürün Adı</th>
+                  <th>Marka</th>
+                  <th>Fiyat (USD)</th>
+                  <th>Miktar</th>
+                  <th>Kategoriler</th>
+                  {isAuthenticated && <th>İşlemler</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProducts.map((product, index) => (
+                  <tr key={product.productId}>
+                    <td>{index + 1}</td>
+                    <td>{product.name}</td>
+                    <td>{product.brand}</td>
+                    <td>${product.priceUSD.toFixed(2)}</td>
+                    <td>{product.quantity} {product.unit}</td>
+                    <td>
+                      {product.categories.map(cat => cat.name).join(", ")}
+                    </td>
       {isAuthenticated && (
-        <div style={{ marginBottom: "2rem", textAlign: "right" }}>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setShowAddForm(!showAddForm);
-              setShowEditForm(false); // Düzenleme formunu kapat
-            }}
-          >
-            {showAddForm ? "Formu Gizle" : "Yeni Ürün Ekle"}
-          </button>
-        </div>
+                      <td>
+                        <Button
+                          variant="warning"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => handleEditClick(product)}
+                        >
+                          <FaEdit /> Düzenle
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => openDeleteModal(product)}
+                        >
+                          <FaTrash /> Sil
+                        </Button>
+                      </td>
       )}
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+      </Card>
 
-      {/* Ürün Ekleme Formu */}
-      {showAddForm && isAuthenticated && (
-        <div className="card" style={{ marginBottom: "2rem" }}>
-          <h2>Yeni Ürün Ekle</h2>
-
-          <form onSubmit={handleSubmitProduct}>
-            <div className="form-group">
-              <label htmlFor="name">Ürün Adı</label>
-              <input
+      {/* Ürün Ekleme Modal */}
+      <Modal show={showAddModal} onHide={() => setShowAddModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Yeni Ürün Ekle</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmitProduct}>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Ürün Adı</Form.Label>
+                  <Form.Control
                 type="text"
-                id="name"
                 name="name"
-                className="form-control"
                 value={newProduct.name}
                 onChange={handleProductChange}
-              />
-              {formErrors.name && (
-                <div className="error-message">{formErrors.name}</div>
-              )}
-            </div>
+                    isInvalid={!!formErrors.name}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.name}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Marka</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="brand"
+                    value={newProduct.brand}
+                    onChange={handleProductChange}
+                    isInvalid={!!formErrors.brand}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.brand}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
 
-            <div className="form-group">
-              <label htmlFor="description">Ürün Açıklaması</label>
-              <textarea
-                id="description"
+            <Form.Group className="mb-3">
+              <Form.Label>Ürün Açıklaması</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
                 name="description"
-                className="form-control"
-                rows="3"
                 value={newProduct.description}
                 onChange={handleProductChange}
-              ></textarea>
-              {formErrors.description && (
-                <div className="error-message">{formErrors.description}</div>
-              )}
-            </div>
+                isInvalid={!!formErrors.description}
+              />
+              <Form.Control.Feedback type="invalid">
+                {formErrors.description}
+              </Form.Control.Feedback>
+            </Form.Group>
 
-            <div className="form-group">
-              <label htmlFor="priceUSD">Fiyat (USD)</label>
-              <input
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Fiyat (USD)</Form.Label>
+                  <Form.Control
                 type="number"
-                id="priceUSD"
+                    step="0.01"
+                    min="0.01"
                 name="priceUSD"
-                className="form-control"
-                min="0.01"
-                step="0.01"
                 value={newProduct.priceUSD}
                 onChange={handleProductChange}
-              />
-              {formErrors.priceUSD && (
-                <div className="error-message">{formErrors.priceUSD}</div>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="quantity">Miktar</label>
-              <input
+                    isInvalid={!!formErrors.priceUSD}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.priceUSD}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Miktar</Form.Label>
+                  <Form.Control
                 type="number"
-                id="quantity"
+                    min="0"
                 name="quantity"
-                className="form-control"
                 value={newProduct.quantity}
                 onChange={handleProductChange}
-              />
-              {formErrors.quantity && (
-                <div className="error-message">{formErrors.quantity}</div>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="unit">Birim</label>
-              <input
+                    isInvalid={!!formErrors.quantity}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.quantity}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Birim</Form.Label>
+                  <Form.Control
                 type="text"
-                id="unit"
                 name="unit"
-                className="form-control"
                 value={newProduct.unit}
                 onChange={handleProductChange}
-              />
-              {formErrors.unit && (
-                <div className="error-message">{formErrors.unit}</div>
-              )}
-            </div>
+                    isInvalid={!!formErrors.unit}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.unit}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
 
-            <div className="form-group">
-              <label htmlFor="brand">Marka</label>
-              <input
-                type="text"
-                id="brand"
-                name="brand"
-                className="form-control"
-                value={newProduct.brand}
-                onChange={handleProductChange}
-              />
-              {formErrors.brand && (
-                <div className="error-message">{formErrors.brand}</div>
+            <Form.Group className="mb-3">
+              <Form.Label>Kategoriler</Form.Label>
+              {formErrors.categoryIds && (
+                <div className="text-danger mb-2">{formErrors.categoryIds}</div>
               )}
-            </div>
-
-            <div className="form-group">
-              <label>Kategoriler</label>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "0.5rem",
-                  marginTop: "0.5rem",
-                }}
-              >
+              <div className="d-flex flex-wrap gap-2">
                 {categories.map((category) => (
-                  <div
+                  <Form.Check
                     key={category.categoryId}
-                    className={`btn ${
-                      newProduct.categoryIds.includes(category.categoryId)
-                        ? "btn-primary"
-                        : "btn-secondary"
-                    }`}
-                    onClick={() => handleCategorySelect(category.categoryId)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {category.name}
-                  </div>
+                    type="checkbox"
+                    id={`category-${category.categoryId}`}
+                    label={category.name}
+                    checked={newProduct.categoryIds.includes(category.categoryId)}
+                    onChange={() => handleCategorySelect(category.categoryId)}
+                    className="me-3"
+                  />
                 ))}
               </div>
-              {formErrors.categoryIds && (
-                <div className="error-message">{formErrors.categoryIds}</div>
-              )}
-            </div>
-
-            <button type="submit" className="btn btn-primary">
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+            İptal
+          </Button>
+          <Button variant="primary" onClick={handleSubmitProduct}>
               Ürün Ekle
-            </button>
-          </form>
-        </div>
-      )}
-      
-      {/* Ürün Düzenleme Formu */}
-      {showEditForm && isAuthenticated && editingProduct && (
-        <div className="card" style={{ marginBottom: "2rem" }}>
-          <h2>Ürün Düzenle</h2>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-          <form onSubmit={handleUpdateProduct}>
-            <input type="hidden" name="productId" value={editFormData.productId} />
-            
-            <div className="form-group">
-              <label htmlFor="edit-name">Ürün Adı</label>
-              <input
+      {/* Ürün Düzenleme Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Ürün Düzenle</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleUpdateProduct}>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Ürün Adı</Form.Label>
+                  <Form.Control
                 type="text"
-                id="edit-name"
                 name="name"
-                className="form-control"
                 value={editFormData.name}
                 onChange={handleEditFormChange}
-              />
-              {formErrors.name && (
-                <div className="error-message">{formErrors.name}</div>
-              )}
-            </div>
+                    isInvalid={!!formErrors.name}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.name}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Marka</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="brand"
+                    value={editFormData.brand}
+                    onChange={handleEditFormChange}
+                    isInvalid={!!formErrors.brand}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.brand}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
 
-            <div className="form-group">
-              <label htmlFor="edit-description">Ürün Açıklaması</label>
-              <textarea
-                id="edit-description"
+            <Form.Group className="mb-3">
+              <Form.Label>Ürün Açıklaması</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
                 name="description"
-                className="form-control"
-                rows="3"
                 value={editFormData.description}
                 onChange={handleEditFormChange}
-              ></textarea>
-              {formErrors.description && (
-                <div className="error-message">{formErrors.description}</div>
-              )}
-            </div>
+                isInvalid={!!formErrors.description}
+              />
+              <Form.Control.Feedback type="invalid">
+                {formErrors.description}
+              </Form.Control.Feedback>
+            </Form.Group>
 
-            <div className="form-group">
-              <label htmlFor="edit-priceUSD">Fiyat (USD)</label>
-              <input
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Fiyat (USD)</Form.Label>
+                  <Form.Control
                 type="number"
-                id="edit-priceUSD"
+                    step="0.01"
+                    min="0.01"
                 name="priceUSD"
-                className="form-control"
-                min="0.01"
-                step="0.01"
                 value={editFormData.priceUSD}
                 onChange={handleEditFormChange}
-              />
-              {formErrors.priceUSD && (
-                <div className="error-message">{formErrors.priceUSD}</div>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="edit-quantity">Miktar</label>
-              <input
+                    isInvalid={!!formErrors.priceUSD}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.priceUSD}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Miktar</Form.Label>
+                  <Form.Control
                 type="number"
-                id="edit-quantity"
+                    min="0"
                 name="quantity"
-                className="form-control"
                 value={editFormData.quantity}
                 onChange={handleEditFormChange}
-              />
-              {formErrors.quantity && (
-                <div className="error-message">{formErrors.quantity}</div>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="edit-unit">Birim</label>
-              <input
+                    isInvalid={!!formErrors.quantity}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.quantity}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Birim</Form.Label>
+                  <Form.Control
                 type="text"
-                id="edit-unit"
                 name="unit"
-                className="form-control"
                 value={editFormData.unit}
                 onChange={handleEditFormChange}
-              />
-              {formErrors.unit && (
-                <div className="error-message">{formErrors.unit}</div>
-              )}
-            </div>
+                    isInvalid={!!formErrors.unit}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {formErrors.unit}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
 
-            <div className="form-group">
-              <label htmlFor="edit-brand">Marka</label>
-              <input
-                type="text"
-                id="edit-brand"
-                name="brand"
-                className="form-control"
-                value={editFormData.brand}
-                onChange={handleEditFormChange}
-              />
-              {formErrors.brand && (
-                <div className="error-message">{formErrors.brand}</div>
+            <Form.Group className="mb-3">
+              <Form.Label>Kategoriler</Form.Label>
+              {formErrors.categoryIds && (
+                <div className="text-danger mb-2">{formErrors.categoryIds}</div>
               )}
-            </div>
-
-            <div className="form-group">
-              <label>Kategoriler</label>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "0.5rem",
-                  marginTop: "0.5rem",
-                }}
-              >
+              <div className="d-flex flex-wrap gap-2">
                 {categories.map((category) => (
-                  <div
+                  <Form.Check
                     key={category.categoryId}
-                    className={`btn ${
-                      editFormData.categoryIds.includes(category.categoryId)
-                        ? "btn-primary"
-                        : "btn-secondary"
-                    }`}
-                    onClick={() => handleEditCategorySelect(category.categoryId)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {category.name}
-                  </div>
+                    type="checkbox"
+                    id={`edit-category-${category.categoryId}`}
+                    label={category.name}
+                    checked={editFormData.categoryIds.includes(category.categoryId)}
+                    onChange={() => handleEditCategorySelect(category.categoryId)}
+                    className="me-3"
+                  />
                 ))}
               </div>
-              {formErrors.categoryIds && (
-                <div className="error-message">{formErrors.categoryIds}</div>
-              )}
-            </div>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            İptal
+          </Button>
+          <Button variant="primary" onClick={handleUpdateProduct}>
+            Güncelle
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <button type="submit" className="btn btn-primary">
-                Güncelle
-              </button>
-              <button 
-                type="button" 
-                className="btn btn-secondary"
-                onClick={() => {
-                  setShowEditForm(false);
-                  setEditingProduct(null);
-                }}
-              >
+      {/* Ürün Silme Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Ürün Sil</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {productToDelete && (
+            <p>
+              <strong>{productToDelete.name}</strong> adlı ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            </p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
                 İptal
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {filteredProducts.length > 0 ? (
-        <div className="products-list">
-          {filteredProducts.map((product) => (
-            <div className="product-item" key={product.productId} style={{ 
-              padding: "1rem", 
-              marginBottom: "1rem", 
-              borderBottom: "1px solid #eee",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center"
-            }}>
-              <div className="product-info">
-                <h3 className="product-title">{product.name}</h3>
-                <p className="product-price">${product.priceUSD.toFixed(2)}</p>
-                <div className="product-details" style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.5rem" }}>
-                  <div><strong>Marka:</strong> {product.brand}</div>
-                  <div><strong>Miktar:</strong> {product.quantity} {product.unit}</div>
-                </div>
-                <div className="product-categories" style={{ fontSize: "0.9rem", color: "#666" }}>
-                  <strong>Kategoriler:</strong> {product.categories && product.categories.length > 0 
-                    ? product.categories.map(cat => cat.name).join(", ") 
-                    : "Kategori yok"}
-                </div>
-                <p className="product-description">{product.description}</p>
-              </div>
-              
-              {isAuthenticated && (
-                <div className="product-actions" style={{ display: "flex", gap: "0.5rem" }}>
-                  <button 
-                    className="btn btn-sm btn-primary"
-                    onClick={() => handleEditClick(product)}
-                  >
-                    Düzenle
-                  </button>
-                  <button 
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDeleteProduct(product.productId)}
-                  >
-                    Sil
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>Bu kriterlere uygun ürün bulunamadı.</p>
-      )}
-    </div>
+          </Button>
+          <Button variant="danger" onClick={handleDeleteProduct}>
+            Sil
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 };
 

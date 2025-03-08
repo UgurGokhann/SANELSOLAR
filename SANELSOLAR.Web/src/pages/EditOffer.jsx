@@ -18,6 +18,7 @@ const EditOffer = () => {
   const [categories, setCategories] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [exchangeRate, setExchangeRate] = useState(0);
+  const [profitMargin, setProfitMargin] = useState(30); // Default profit margin of 30%
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [installationAddress, setInstallationAddress] = useState('');
   const [referenceNumber, setReferenceNumber] = useState('');
@@ -37,7 +38,17 @@ const EditOffer = () => {
 
   useEffect(() => {
     calculateTotals();
-  }, [offerItems, exchangeRate]);
+  }, [offerItems, exchangeRate, profitMargin]);
+
+  useEffect(() => {
+    if (exchangeRate > 0 && offerItems.length > 0) {
+      const updatedItems = offerItems.map(item => ({
+        ...item,
+        totalTRY: calculateTRYAmount(item.totalUSD)
+      }));
+      setOfferItems(updatedItems);
+    }
+  }, [exchangeRate, profitMargin]);
 
   useEffect(() => {
     if (selectedCategory) {
@@ -46,6 +57,12 @@ const EditOffer = () => {
       setFilteredProducts(products);
     }
   }, [selectedCategory, products]);
+
+  // Helper function to calculate TRY amount with profit margin
+  const calculateTRYAmount = (usdAmount) => {
+    const profitMultiplier = 1 + (profitMargin / 100);
+    return usdAmount * exchangeRate * profitMultiplier;
+  };
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -102,19 +119,17 @@ const EditOffer = () => {
           return {
             id: item.offerItemId,
             offerItemId: item.offerItemId,
-            productId: item.productId,
-            productName: item.productName || (product ? product.name : ''),
-            brand: product ? product.brand : 'SANEL SOLAR',
+            productId: item.productId.toString(),
+            productName: product ? product.name : 'Ürün',
             quantity: item.quantity,
-            unit: product ? product.unit : 'Adet',
             unitPriceUSD: item.unitPriceUSD,
-            totalUSD: item.totalPriceUSD,
-            totalTRY: item.totalPriceTRY
+            totalUSD: item.quantity * item.unitPriceUSD,
+            totalTRY: calculateTRYAmount(item.quantity * item.unitPriceUSD),
+            unit: product ? product.unit : 'Adet',
+            brand: product ? product.brand : 'SANEL SOLAR'
           };
         });
         setOfferItems(mappedItems);
-      } else {
-        setOfferItems([{ id: Date.now(), productId: '', quantity: 1, unitPriceUSD: 0, totalUSD: 0, totalTRY: 0 }]);
       }
     } catch (error) {
       toast.error('Teklif verileri yüklenirken bir hata oluştu');
@@ -127,16 +142,12 @@ const EditOffer = () => {
   const fetchProductsByCategory = async (categoryId) => {
     try {
       if (categoryId) {
-        console.log("Kategori ID'ye göre ürünler getiriliyor:", categoryId);
         const categoryProducts = await productService.getProductsByCategory(categoryId);
-        console.log("Kategoriye göre filtrelenmiş ürünler:", categoryProducts);
         setFilteredProducts(categoryProducts);
       } else {
-        console.log("Tüm ürünler gösteriliyor");
         setFilteredProducts(products);
       }
     } catch (error) {
-      console.error("Kategori ürünleri yüklenirken hata:", error);
       toast.error('Kategoriye göre ürünler yüklenirken bir hata oluştu');
       setFilteredProducts(products);
     }
@@ -176,7 +187,7 @@ const EditOffer = () => {
         // Recalculate totals if quantity or price changes
         if (field === 'quantity' || field === 'unitPriceUSD') {
           updatedItem.totalUSD = updatedItem.quantity * updatedItem.unitPriceUSD;
-          updatedItem.totalTRY = updatedItem.totalUSD * exchangeRate;
+          updatedItem.totalTRY = calculateTRYAmount(updatedItem.totalUSD);
         }
         
         return updatedItem;
@@ -246,6 +257,20 @@ const EditOffer = () => {
       toast.error(error.message || 'Teklif güncellenirken bir hata oluştu');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleExchangeRateChange = (e) => {
+    const newRate = parseFloat(e.target.value);
+    if (!isNaN(newRate) && newRate > 0) {
+      setExchangeRate(newRate);
+    }
+  };
+
+  const handleProfitMarginChange = (e) => {
+    const newMargin = parseFloat(e.target.value);
+    if (!isNaN(newMargin) && newMargin >= 0) {
+      setProfitMargin(newMargin);
     }
   };
 
@@ -347,8 +372,19 @@ const EditOffer = () => {
                     type="number"
                     step="0.01"
                     value={exchangeRate}
-                    onChange={(e) => setExchangeRate(parseFloat(e.target.value))}
+                    onChange={handleExchangeRateChange}
                     required
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Kar Oranı (%)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={profitMargin}
+                    onChange={handleProfitMarginChange}
                   />
                 </Form.Group>
 
@@ -447,7 +483,7 @@ const EditOffer = () => {
                                     brand: product.brand || 'SANEL SOLAR',
                                     unit: product.unit || 'Adet',
                                     totalUSD: offerItem.quantity * (product.priceUSD || 0),
-                                    totalTRY: offerItem.quantity * (product.priceUSD || 0) * exchangeRate
+                                    totalTRY: calculateTRYAmount(offerItem.quantity * (product.priceUSD || 0))
                                   };
                                 }
                                 return offerItem;
@@ -479,7 +515,7 @@ const EditOffer = () => {
                           const updatedItems = offerItems.map(offerItem => {
                             if (offerItem.id === item.id) {
                               const totalUSD = quantity * offerItem.unitPriceUSD;
-                              const totalTRY = totalUSD * exchangeRate;
+                              const totalTRY = calculateTRYAmount(totalUSD);
                               
                               return {
                                 ...offerItem,
@@ -511,7 +547,7 @@ const EditOffer = () => {
                             const updatedItems = offerItems.map(offerItem => {
                               if (offerItem.id === item.id) {
                                 const totalUSD = offerItem.quantity * unitPriceUSD;
-                                const totalTRY = totalUSD * exchangeRate;
+                                const totalTRY = calculateTRYAmount(totalUSD);
                                 
                                 return {
                                   ...offerItem,
@@ -554,7 +590,15 @@ const EditOffer = () => {
               <Button 
                 variant="success" 
                 onClick={() => {
-                  setOfferItems([...offerItems, { id: Date.now(), productId: '', quantity: 1, unitPriceUSD: 0, totalUSD: 0, totalTRY: 0 }]);
+                  const newItem = { 
+                    id: Date.now(), 
+                    productId: '', 
+                    quantity: 1, 
+                    unitPriceUSD: 0, 
+                    totalUSD: 0, 
+                    totalTRY: 0 
+                  };
+                  setOfferItems([...offerItems, newItem]);
                 }}
                 style={{ padding: '8px 16px' }}
               >

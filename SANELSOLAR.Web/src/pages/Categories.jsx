@@ -3,7 +3,20 @@ import { Link } from "react-router-dom";
 import categoryService from "../services/categoryService";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
-import "./Home.css"; // Aynı stil dosyasını kullanıyoruz
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Table,
+  Form,
+  Modal,
+  Alert,
+  InputGroup,
+  Spinner,
+} from "react-bootstrap";
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes } from "react-icons/fa";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -14,20 +27,25 @@ const Categories = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Kategori ekleme formu için state
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [newCategory, setNewCategory] = useState({
     name: "",
     description: "",
   });
-  const [formErrors, setFormErrors] = useState({});
-
+  
   // Kategori güncelleme formu için state
-  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [updateCategory, setUpdateCategory] = useState({
     categoryId: 0,
     name: "",
     description: "",
   });
+  
+  // Kategori silme için state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+  
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -65,6 +83,21 @@ const Categories = () => {
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
+  
+  const handleSearch = () => {
+    // Mevcut kategoriler içinde arama yap
+    if (categories.length > 0) {
+      const filtered = categories.filter(category => 
+        category.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredCategories(filtered);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setFilteredCategories(categories);
+  };
 
   // Yeni kategori form değişikliklerini işle
   const handleCategoryChange = (e) => {
@@ -89,10 +122,10 @@ const Categories = () => {
   };
 
   // Form doğrulama
-  const validateCategoryForm = () => {
+  const validateCategoryForm = (formData) => {
     const errors = {};
 
-    if (!newCategory.name.trim()) {
+    if (!formData.name.trim()) {
       errors.name = "Kategori adı gereklidir";
     }
 
@@ -100,299 +133,310 @@ const Categories = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Güncelleme formu doğrulama
-  const validateUpdateForm = () => {
-    const errors = {};
-
-    if (!updateCategory.name.trim()) {
-      errors.name = "Kategori adı gereklidir";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Kategori ekleme formunu gönder
+  // Yeni kategori ekleme
   const handleSubmitCategory = async (e) => {
     e.preventDefault();
-
-    if (!validateCategoryForm()) {
-      // Form doğrulama hatalarını toast ile göster
-      Object.values(formErrors).forEach((error) => {
-        if (error) toast.error(error);
-      });
+    
+    if (!validateCategoryForm(newCategory)) {
       return;
     }
 
     try {
-      const categoryData = {
-        ...newCategory,
-      };
-
-      const createdCategory = await categoryService.createCategory(
-        categoryData
-      );
-
-      // Kategori listesini güncelle
-      setCategories([...categories, createdCategory]);
-
-      // Formu temizle
-      setNewCategory({
-        name: "",
-        description: "",
-      });
-
-      // Başarı mesajını toast ile göster
-      toast.success("Kategori başarıyla eklendi");
-
-      // Form başarıyla gönderildikten sonra formu kapat
-      setShowAddForm(false);
-    } catch (err) {
-      // Hata mesajını toast ile göster
-      toast.error(err.message || "Kategori eklenirken bir hata oluştu");
-    }
-  };
-
-  // Kategori güncelleme formunu gönder
-  const handleUpdateCategory = async (e) => {
-    e.preventDefault();
-
-    if (!validateUpdateForm()) {
-      // Form doğrulama hatalarını toast ile göster
-      Object.values(formErrors).forEach((error) => {
-        if (error) toast.error(error);
-      });
-      return;
-    }
-
-    try {
-      await categoryService.updateCategory(updateCategory);
-
-      // Kategori listesini güncelle
-      const updatedCategories = categories.map(cat => 
-        cat.categoryId === updateCategory.categoryId 
-          ? { ...cat, name: updateCategory.name, description: updateCategory.description } 
-          : cat
-      );
-      setCategories(updatedCategories);
-
-      // Başarı mesajını toast ile göster
-      toast.success("Kategori başarıyla güncellendi");
-
-      // Form başarıyla gönderildikten sonra formu kapat
-      setShowUpdateForm(false);
-    } catch (err) {
-      // Hata mesajını toast ile göster
-      toast.error(err.message || "Kategori güncellenirken bir hata oluştu");
-    }
-  };
-
-  // Kategori silme işlemi
-  const handleDeleteCategory = async (categoryId) => {
-    if (window.confirm("Bu kategoriyi silmek istediğinizden emin misiniz?")) {
-      try {
-        await categoryService.deleteCategory(categoryId);
+      const response = await categoryService.createCategory(newCategory);
+      
+      if (response) {
+        toast.success("Kategori başarıyla eklendi");
+        
+        // Formu sıfırla
+        setNewCategory({
+          name: "",
+          description: "",
+        });
         
         // Kategori listesini güncelle
-        const updatedCategories = categories.filter(cat => cat.categoryId !== categoryId);
+        const updatedCategories = await categoryService.getCategoriesWithProducts();
         setCategories(updatedCategories);
+        setFilteredCategories(updatedCategories);
         
-        // Başarı mesajını toast ile göster
-        toast.success("Kategori başarıyla silindi");
-      } catch (err) {
-        // Hata mesajını toast ile göster
-        toast.error(err.message || "Kategori silinirken bir hata oluştu");
+        // Modalı kapat
+        setShowAddModal(false);
       }
+    } catch (err) {
+      toast.error("Kategori eklenirken bir hata oluştu: " + err.message);
+      console.error("Kategori ekleme hatası:", err);
     }
   };
 
-  // Güncelleme formunu aç
-  const openUpdateForm = (category) => {
+  // Kategori güncelleme
+  const handleUpdateCategory = async (e) => {
+    e.preventDefault();
+    
+    if (!validateCategoryForm(updateCategory)) {
+      return;
+    }
+
+    try {
+      const response = await categoryService.updateCategory(
+        updateCategory.categoryId,
+        updateCategory
+      );
+      
+      if (response) {
+        toast.success("Kategori başarıyla güncellendi");
+        
+        // Kategori listesini güncelle
+        const updatedCategories = await categoryService.getCategoriesWithProducts();
+        setCategories(updatedCategories);
+        setFilteredCategories(updatedCategories);
+        
+        // Modalı kapat
+        setShowEditModal(false);
+      }
+    } catch (err) {
+      toast.error("Kategori güncellenirken bir hata oluştu: " + err.message);
+      console.error("Kategori güncelleme hatası:", err);
+    }
+  };
+
+  // Kategori silme
+  const openDeleteModal = (category) => {
+    setCategoryToDelete(category);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+    
+    try {
+      await categoryService.deleteCategory(categoryToDelete.categoryId);
+      toast.success("Kategori başarıyla silindi");
+      
+      // Kategori listesini güncelle
+      const updatedCategories = await categoryService.getCategoriesWithProducts();
+      setCategories(updatedCategories);
+      setFilteredCategories(updatedCategories);
+      
+      // Modalı kapat
+      setShowDeleteModal(false);
+    } catch (err) {
+      toast.error("Kategori silinirken bir hata oluştu: " + err.message);
+      console.error("Kategori silme hatası:", err);
+    }
+  };
+
+  // Kategori düzenleme formunu aç
+  const openEditModal = (category) => {
     setUpdateCategory({
       categoryId: category.categoryId,
       name: category.name,
       description: category.description || "",
     });
-    setShowUpdateForm(true);
-    setShowAddForm(false); // Ekleme formunu kapat
+    setShowEditModal(true);
   };
 
-  if (loading) {
-    return <div className="loading">Yükleniyor...</div>;
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
-
   return (
-    <div className="container">
-      <h1 className="section-title">Kategoriler</h1>
+    <Container className="py-4">
+      <Card className="shadow-sm">
+        <Card.Header className="bg-primary text-white">
+          <h4 className="mb-0">Kategori Yönetimi</h4>
+        </Card.Header>
+        <Card.Body>
+          {error && <Alert variant="danger">{error}</Alert>}
 
-      {/* Arama Kutusu */}
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Kategori ara..."
-          className="search-input"
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-      </div>
+          <Row className="mb-3">
+            <Col md={6}>
+              <InputGroup>
+                <Form.Control
+                  type="text"
+                  placeholder="Kategori ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                />
+                <Button variant="outline-secondary" onClick={clearSearch}>
+                  <FaTimes />
+                </Button>
+                <Button variant="primary" onClick={handleSearch}>
+                  <FaSearch /> Ara
+                </Button>
+              </InputGroup>
+            </Col>
+            <Col md={6} className="text-end">
+              {isAuthenticated && (
+                <Button variant="success" onClick={() => setShowAddModal(true)}>
+                  <FaPlus /> Yeni Kategori
+                </Button>
+              )}
+            </Col>
+          </Row>
 
-      {/* Kategori Ekleme Butonu - Sadece yetkili kullanıcılar görebilir */}
-      {isAuthenticated && (
-        <div style={{ marginBottom: "2rem", textAlign: "right" }}>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setShowAddForm(!showAddForm);
-              setShowUpdateForm(false); // Güncelleme formunu kapat
-            }}
-          >
-            {showAddForm ? "Formu Gizle" : "Yeni Kategori Ekle"}
-          </button>
-        </div>
-      )}
+          {loading ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" variant="primary" />
+              <p className="mt-2">Yükleniyor...</p>
+            </div>
+          ) : filteredCategories.length === 0 ? (
+            <Alert variant="info">
+              Kategori bulunamadı. Yeni kategori eklemek için "Yeni Kategori" butonuna tıklayın.
+            </Alert>
+          ) : (
+            <Table responsive striped hover>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Kategori Adı</th>
+                  <th>Açıklama</th>
+                  <th>Ürün Sayısı</th>
+                  {isAuthenticated && <th>İşlemler</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCategories.map((category, index) => (
+                  <tr key={category.categoryId}>
+                    <td>{index + 1}</td>
+                    <td>{category.name}</td>
+                    <td>{category.description || "-"}</td>
+                    <td>{category.productCount || 0}</td>
+                    {isAuthenticated && (
+                      <td>
+                        <Button
+                          variant="warning"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => openEditModal(category)}
+                        >
+                          <FaEdit /> Düzenle
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => openDeleteModal(category)}
+                        >
+                          <FaTrash /> Sil
+                        </Button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+      </Card>
 
-      {/* Kategori Ekleme Formu */}
-      {showAddForm && isAuthenticated && (
-        <div className="card form-card" style={{ marginBottom: "2rem" }}>
-          <h2>Yeni Kategori Ekle</h2>
-
-          <form onSubmit={handleSubmitCategory}>
-            <div className="form-group">
-              <label htmlFor="name">Kategori Adı</label>
-              <input
+      {/* Kategori Ekleme Modal */}
+      <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Yeni Kategori Ekle</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmitCategory}>
+            <Form.Group className="mb-3">
+              <Form.Label>Kategori Adı</Form.Label>
+              <Form.Control
                 type="text"
-                id="name"
                 name="name"
-                className="form-control"
                 value={newCategory.name}
                 onChange={handleCategoryChange}
+                isInvalid={!!formErrors.name}
               />
-              {formErrors.name && (
-                <div className="error-message">{formErrors.name}</div>
-              )}
-            </div>
+              <Form.Control.Feedback type="invalid">
+                {formErrors.name}
+              </Form.Control.Feedback>
+            </Form.Group>
 
-            <div className="form-group">
-              <label htmlFor="description">Kategori Açıklaması <span className="optional-text">(Opsiyonel)</span></label>
-              <textarea
-                id="description"
+            <Form.Group className="mb-3">
+              <Form.Label>Kategori Açıklaması <span className="text-muted">(Opsiyonel)</span></Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
                 name="description"
-                className="form-control"
-                rows="3"
                 value={newCategory.description}
                 onChange={handleCategoryChange}
-              ></textarea>
-              {formErrors.description && (
-                <div className="error-message">{formErrors.description}</div>
-              )}
-            </div>
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+            İptal
+          </Button>
+          <Button variant="primary" onClick={handleSubmitCategory}>
+            Kategori Ekle
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-            <button type="submit" className="btn btn-primary">
-              Kategori Ekle
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Kategori Güncelleme Formu */}
-      {showUpdateForm && isAuthenticated && (
-        <div className="card form-card" style={{ marginBottom: "2rem" }}>
-          <h2>Kategori Güncelle</h2>
-
-          <form onSubmit={handleUpdateCategory}>
-            <div className="form-group">
-              <label htmlFor="update-name">Kategori Adı</label>
-              <input
+      {/* Kategori Düzenleme Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Kategori Düzenle</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleUpdateCategory}>
+            <Form.Group className="mb-3">
+              <Form.Label>Kategori Adı</Form.Label>
+              <Form.Control
                 type="text"
-                id="update-name"
                 name="name"
-                className="form-control"
                 value={updateCategory.name}
                 onChange={handleUpdateChange}
+                isInvalid={!!formErrors.name}
               />
-              {formErrors.name && (
-                <div className="error-message">{formErrors.name}</div>
-              )}
-            </div>
+              <Form.Control.Feedback type="invalid">
+                {formErrors.name}
+              </Form.Control.Feedback>
+            </Form.Group>
 
-            <div className="form-group">
-              <label htmlFor="update-description">Kategori Açıklaması <span className="optional-text">(Opsiyonel)</span></label>
-              <textarea
-                id="update-description"
+            <Form.Group className="mb-3">
+              <Form.Label>Kategori Açıklaması <span className="text-muted">(Opsiyonel)</span></Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
                 name="description"
-                className="form-control"
-                rows="3"
                 value={updateCategory.description}
                 onChange={handleUpdateChange}
-              ></textarea>
-              {formErrors.description && (
-                <div className="error-message">{formErrors.description}</div>
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            İptal
+          </Button>
+          <Button variant="primary" onClick={handleUpdateCategory}>
+            Güncelle
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Kategori Silme Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Kategori Sil</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {categoryToDelete && (
+            <p>
+              <strong>{categoryToDelete.name}</strong> adlı kategoriyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+              {categoryToDelete.productCount > 0 && (
+                <Alert variant="warning" className="mt-2">
+                  Bu kategoriye ait {categoryToDelete.productCount} ürün bulunmaktadır. Kategoriyi sildiğinizde bu ürünler kategorisiz kalacaktır.
+                </Alert>
               )}
-            </div>
-
-            <div className="button-group">
-              <button type="submit" className="btn btn-primary">
-                Güncelle
-              </button>
-              <button 
-                type="button" 
-                className="btn btn-secondary"
-                onClick={() => setShowUpdateForm(false)}
-              >
-                İptal
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {filteredCategories.length > 0 ? (
-        <div className="categories-grid">
-          {filteredCategories.map((category) => (
-            <div className="category-card" key={category.categoryId}>
-              <h2 className="category-title">{category.name}</h2>
-              <p className="category-description">{category.description || "Açıklama yok"}</p>
-              
-              <div className="category-actions">
-                <Link
-                  to={`/products?category=${category.categoryId}`}
-                  className="btn btn-primary"
-                >
-                  Ürünleri Gör
-                </Link>
-                
-                {isAuthenticated && (
-                  <>
-                    <button 
-                      className="btn btn-secondary"
-                      onClick={() => openUpdateForm(category)}
-                    >
-                      Düzenle
-                    </button>
-                    <button 
-                      className="btn btn-danger"
-                      onClick={() => handleDeleteCategory(category.categoryId)}
-                    >
-                      Sil
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>
-          {searchTerm.trim() !== "" 
-            ? `"${searchTerm}" ile eşleşen kategori bulunamadı.` 
-            : "Henüz kategori bulunmamaktadır."}
-        </p>
-      )}
-    </div>
+            </p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            İptal
+          </Button>
+          <Button variant="danger" onClick={handleDeleteCategory}>
+            Sil
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 };
 
