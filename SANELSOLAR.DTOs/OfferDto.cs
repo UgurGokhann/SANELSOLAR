@@ -3,48 +3,47 @@ using System.Collections.Generic;
 
 namespace SANELSOLAR.DTOs
 {
-    // DTO for creating a new offer item
-    public class OfferItemCreateDto : BaseDTO
-    {
-        public int ProductId { get; set; }
-        public int Quantity { get; set; }
-        public decimal UnitPriceUSD { get; set; }
-    }
-
-    // DTO for updating an existing offer item
-    public class OfferItemUpdateDto : BaseDTO
-    {
-        public int OfferItemId { get; set; }
-        public int ProductId { get; set; }
-        public int Quantity { get; set; }
-        public decimal UnitPriceUSD { get; set; }
-    }
-
-    // DTO for creating a new offer
-    public class OfferCreateDto : BaseDTO
+    public class CreateOfferDto : BaseDTO
     {
         public int CustomerId { get; set; }
-        public DateTime ValidUntil { get; set; }
-        public decimal ExchangeRate { get; set; }
-        public string Notes { get; set; }
-        public List<OfferItemCreateDto> OfferItems { get; set; }
-    }
-
-    // DTO for updating an existing offer
-    public class OfferUpdateDto : BaseDTO
-    {
-        public int OfferId { get; set; }
-        public int CustomerId { get; set; }
+        public int UserId { get; set; }
+        public DateTime OfferDate { get; set; } = DateTime.UtcNow;
         public DateTime ValidUntil { get; set; }
         public decimal ExchangeRate { get; set; }
         public string Notes { get; set; }
         public string Status { get; set; }
+        public List<CreateOfferItemDto> OfferItems { get; set; }
     }
 
-    // DTO for updating offer status
-    public class OfferStatusUpdateDto
+    public class UpdateOfferDto : BaseDTO
     {
         public int OfferId { get; set; }
+        public int CustomerId { get; set; }
+        public int UserId { get; set; }
+        public DateTime OfferDate { get; set; }
+        public DateTime ValidUntil { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public string Notes { get; set; }
+        public decimal TotalAmountUSD { get; set; }
+        public decimal TotalAmountTRY { get; set; }
         public string Status { get; set; }
+        public List<UpdateOfferItemDto> OfferItems { get; set; }
+    }
+
+    public class ListOfferDto : BaseDTO
+    {
+        public int OfferId { get; set; }
+        public int CustomerId { get; set; }
+        public string CustomerName { get; set; }
+        public int UserId { get; set; }
+        public string UserName { get; set; }
+        public DateTime OfferDate { get; set; }
+        public DateTime ValidUntil { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public string Notes { get; set; }
+        public decimal TotalAmountUSD { get; set; }
+        public decimal TotalAmountTRY { get; set; }
+        public string Status { get; set; }
+        public List<ListOfferItemDto> OfferItems { get; set; }
     }
 } 

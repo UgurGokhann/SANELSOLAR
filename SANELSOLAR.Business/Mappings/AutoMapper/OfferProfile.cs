@@ -8,15 +8,20 @@ namespace SANELSOLAR.Business.Mappings.AutoMapper
     {
         public OfferProfile()
         {
-            // Offer ve OfferItem için temel eşleştirmeler
-            CreateMap<OfferItemCreateDto, OfferItem>().ReverseMap();
-            CreateMap<OfferItemUpdateDto, OfferItem>().ReverseMap();
-            
-            CreateMap<OfferCreateDto, Offer>().ReverseMap();
-            CreateMap<OfferUpdateDto, Offer>().ReverseMap();
-            CreateMap<OfferStatusUpdateDto, Offer>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
-                .ReverseMap();
+            // Offer mappings
+            CreateMap<Offer, CreateOfferDto>().ReverseMap();
+            CreateMap<Offer, UpdateOfferDto>().ReverseMap();
+            CreateMap<Offer, ListOfferDto>()
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Customer.Fullname))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName));
+
+            // OfferItem mappings
+            CreateMap<OfferItem, CreateOfferItemDto>().ReverseMap();
+            CreateMap<OfferItem, UpdateOfferItemDto>().ReverseMap();
+            CreateMap<OfferItem, ListOfferItemDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
+                ;
         }
     }
+    
 } 
