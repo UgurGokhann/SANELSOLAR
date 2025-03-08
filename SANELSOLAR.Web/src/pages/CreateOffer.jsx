@@ -17,6 +17,7 @@ const CreateOffer = () => {
   const [categories, setCategories] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [exchangeRate, setExchangeRate] = useState(0);
+  const [profitMargin, setProfitMargin] = useState(30); // Default profit margin of 30%
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [installationAddress, setInstallationAddress] = useState('');
   const [referenceNumber, setReferenceNumber] = useState('');
@@ -36,7 +37,17 @@ const CreateOffer = () => {
 
   useEffect(() => {
     calculateTotals();
-  }, [offerItems, exchangeRate]);
+  }, [offerItems, exchangeRate, profitMargin]);
+
+  useEffect(() => {
+    if (exchangeRate > 0 && offerItems.length > 0) {
+      const updatedItems = offerItems.map(item => ({
+        ...item,
+        totalTRY: calculateTRYAmount(item.totalUSD)
+      }));
+      setOfferItems(updatedItems);
+    }
+  }, [exchangeRate, profitMargin]);
 
   useEffect(() => {
     if (selectedCategory) {
@@ -45,6 +56,12 @@ const CreateOffer = () => {
       setFilteredProducts(products);
     }
   }, [selectedCategory, products]);
+
+  // Helper function to calculate TRY amount with profit margin
+  const calculateTRYAmount = (usdAmount) => {
+    const profitMultiplier = 1 + (profitMargin / 100);
+    return usdAmount * exchangeRate * profitMultiplier;
+  };
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -139,7 +156,7 @@ const CreateOffer = () => {
         // Recalculate totals if quantity or price changes
         if (field === 'quantity' || field === 'unitPriceUSD') {
           updatedItem.totalUSD = updatedItem.quantity * updatedItem.unitPriceUSD;
-          updatedItem.totalTRY = updatedItem.totalUSD * exchangeRate;
+          updatedItem.totalTRY = calculateTRYAmount(updatedItem.totalUSD);
         }
         
         return updatedItem;
@@ -202,6 +219,20 @@ const CreateOffer = () => {
       toast.error(error.message || 'Teklif oluşturulurken bir hata oluştu');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleExchangeRateChange = (e) => {
+    const newRate = parseFloat(e.target.value);
+    if (!isNaN(newRate) && newRate > 0) {
+      setExchangeRate(newRate);
+    }
+  };
+
+  const handleProfitMarginChange = (e) => {
+    const newMargin = parseFloat(e.target.value);
+    if (!isNaN(newMargin) && newMargin >= 0) {
+      setProfitMargin(newMargin);
     }
   };
 
@@ -293,8 +324,19 @@ const CreateOffer = () => {
                     type="number"
                     step="0.01"
                     value={exchangeRate}
-                    onChange={(e) => setExchangeRate(parseFloat(e.target.value))}
+                    onChange={handleExchangeRateChange}
                     required
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Kar Oranı (%)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={profitMargin}
+                    onChange={handleProfitMarginChange}
                   />
                 </Form.Group>
 
@@ -371,6 +413,7 @@ const CreateOffer = () => {
                               // Önce state'i doğrudan güncelle
                               const updatedItems = offerItems.map(offerItem => {
                                 if (offerItem.id === item.id) {
+                                  const totalUSD = offerItem.quantity * (product.priceUSD || 0);
                                   return {
                                     ...offerItem,
                                     productId: productId,
@@ -378,8 +421,8 @@ const CreateOffer = () => {
                                     unitPriceUSD: product.priceUSD || 0,
                                     brand: product.brand || 'SANEL SOLAR',
                                     unit: product.unit || 'Adet',
-                                    totalUSD: offerItem.quantity * (product.priceUSD || 0),
-                                    totalTRY: offerItem.quantity * (product.priceUSD || 0) * exchangeRate
+                                    totalUSD: totalUSD,
+                                    totalTRY: calculateTRYAmount(totalUSD)
                                   };
                                 }
                                 return offerItem;
@@ -411,7 +454,7 @@ const CreateOffer = () => {
                           const updatedItems = offerItems.map(offerItem => {
                             if (offerItem.id === item.id) {
                               const totalUSD = quantity * offerItem.unitPriceUSD;
-                              const totalTRY = totalUSD * exchangeRate;
+                              const totalTRY = calculateTRYAmount(totalUSD);
                               
                               return {
                                 ...offerItem,
@@ -443,7 +486,7 @@ const CreateOffer = () => {
                             const updatedItems = offerItems.map(offerItem => {
                               if (offerItem.id === item.id) {
                                 const totalUSD = offerItem.quantity * unitPriceUSD;
-                                const totalTRY = totalUSD * exchangeRate;
+                                const totalTRY = calculateTRYAmount(totalUSD);
                                 
                                 return {
                                   ...offerItem,
@@ -486,7 +529,15 @@ const CreateOffer = () => {
               <Button 
                 variant="success" 
                 onClick={() => {
-                  setOfferItems([...offerItems, { id: Date.now(), productId: '', quantity: 1, unitPriceUSD: 0, totalUSD: 0, totalTRY: 0 }]);
+                  const newItem = { 
+                    id: Date.now(), 
+                    productId: '', 
+                    quantity: 1, 
+                    unitPriceUSD: 0, 
+                    totalUSD: 0, 
+                    totalTRY: 0 
+                  };
+                  setOfferItems([...offerItems, newItem]);
                 }}
                 style={{ padding: '8px 16px' }}
               >
