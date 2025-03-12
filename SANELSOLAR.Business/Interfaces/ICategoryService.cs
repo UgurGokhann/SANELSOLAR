@@ -12,5 +12,6 @@ namespace SANELSOLAR.Business.Interfaces
         Task<IResponse<CategoryUpdateDto>> UpdateCategoryAsync(CategoryUpdateDto dto);
         Task<IResponse<List<CategoryListDto>>> GetCategoriesWithProductsAsync();
         Task<IResponse<List<CategoryListDto>>> SearchCategoriesAsync(string searchTerm);
+        Task<IResponse> RemoveCategoryAsync(int id, bool transferToDefault);
     }
 } 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import categoryService from "../services/categoryService";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
@@ -15,8 +15,9 @@ import {
   Alert,
   InputGroup,
   Spinner,
+  Badge,
 } from "react-bootstrap";
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes, FaExternalLinkAlt } from "react-icons/fa";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -25,6 +26,7 @@ const Categories = () => {
   const [error, setError] = useState(null);
   const { isAuthenticated, user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   // Kategori ekleme formu için state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -38,7 +40,7 @@ const Categories = () => {
   const [updateCategory, setUpdateCategory] = useState({
     categoryId: 0,
     name: "",
-    description: "",
+    description: ""
   });
   
   // Kategori silme için state
@@ -174,12 +176,16 @@ const Categories = () => {
     if (!validateCategoryForm(updateCategory)) {
       return;
     }
+    
+    // Ekstra kontrol: "DIGER" kategorisinin güncellenmesini engelle
+    if (updateCategory.name === "DIGER") {
+      toast.error("DIGER kategorisi güncellenemez");
+      setShowEditModal(false);
+      return;
+    }
 
     try {
-      const response = await categoryService.updateCategory(
-        updateCategory.categoryId,
-        updateCategory
-      );
+      const response = await categoryService.updateCategory(updateCategory);
       
       if (response) {
         toast.success("Kategori başarıyla güncellendi");
@@ -194,12 +200,17 @@ const Categories = () => {
       }
     } catch (err) {
       toast.error("Kategori güncellenirken bir hata oluştu: " + err.message);
-      console.error("Kategori güncelleme hatası:", err);
     }
   };
 
   // Kategori silme
   const openDeleteModal = (category) => {
+    // "DIGER" kategorisinin silinmesini engelle
+    if (category.name === "DIGER") {
+      toast.error("DIGER kategorisi silinemez");
+      return;
+    }
+    
     setCategoryToDelete(category);
     setShowDeleteModal(true);
   };
@@ -207,9 +218,24 @@ const Categories = () => {
   const handleDeleteCategory = async () => {
     if (!categoryToDelete) return;
     
+    // Ekstra kontrol: "DIGER" kategorisinin silinmesini engelle
+    if (categoryToDelete.name === "DIGER") {
+      toast.error("DIGER kategorisi silinemez");
+      setShowDeleteModal(false);
+      return;
+    }
+    
     try {
+      // Eğer kategoriye ait ürünler varsa, kullanıcıya bilgi ver
+      const hasProducts = categoryToDelete.productCount > 0;
+      
       await categoryService.deleteCategory(categoryToDelete.categoryId);
-      toast.success("Kategori başarıyla silindi");
+      
+      if (hasProducts) {
+        toast.success(`Kategori başarıyla silindi. ${categoryToDelete.productCount} ürün "DIGER" kategorisine aktarıldı.`);
+      } else {
+        toast.success("Kategori başarıyla silindi.");
+      }
       
       // Kategori listesini güncelle
       const updatedCategories = await categoryService.getCategoriesWithProducts();
@@ -226,12 +252,24 @@ const Categories = () => {
 
   // Kategori düzenleme formunu aç
   const openEditModal = (category) => {
+    // "DIGER" kategorisinin güncellenmesini engelle
+    if (category.name === "DIGER") {
+      toast.error("DIGER kategorisi güncellenemez");
+      return;
+    }
+    
     setUpdateCategory({
       categoryId: category.categoryId,
       name: category.name,
-      description: category.description || "",
+      description: category.description || ""
     });
+    
     setShowEditModal(true);
+  };
+
+  // Ürün sayısına tıklandığında ürünler sayfasına yönlendir
+  const handleProductCountClick = (categoryId) => {
+    navigate(`/products?category=${categoryId}`);
   };
 
   return (
@@ -294,26 +332,52 @@ const Categories = () => {
                 {filteredCategories.map((category, index) => (
                   <tr key={category.categoryId}>
                     <td>{index + 1}</td>
-                    <td>{category.name}</td>
+                    <td>
+                      {category.name}
+                    </td>
                     <td>{category.description || "-"}</td>
-                    <td>{category.productCount || 0}</td>
+                    <td>
+                      {category.productCount > 0 ? (
+                        <Badge 
+                          bg="primary" 
+                          className="product-count-badge" 
+                          onClick={() => handleProductCountClick(category.categoryId)}
+                          style={{ 
+                            cursor: 'pointer', 
+                            padding: '6px 10px',
+                            fontSize: '0.9rem'
+                          }}
+                        >
+                          {category.productCount} <FaExternalLinkAlt size={10} className="ms-1" />
+                        </Badge>
+                      ) : (
+                        <span>0</span>
+                      )}
+                    </td>
                     {isAuthenticated && (
                       <td>
-                        <Button
-                          variant="warning"
-                          size="sm"
-                          className="me-2"
-                          onClick={() => openEditModal(category)}
-                        >
-                          <FaEdit /> Düzenle
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => openDeleteModal(category)}
-                        >
-                          <FaTrash /> Sil
-                        </Button>
+                        {category.name !== "DIGER" && (
+                          <>
+                            <Button
+                              variant="warning"
+                              size="sm"
+                              className="me-2"
+                              onClick={() => openEditModal(category)}
+                            >
+                              <FaEdit /> Düzenle
+                            </Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => openDeleteModal(category)}
+                            >
+                              <FaTrash /> Sil
+                            </Button>
+                          </>
+                        )}
+                        {category.name === "DIGER" && (
+                          <Badge bg="secondary">Sistem Kategorisi</Badge>
+                        )}
                       </td>
                     )}
                   </tr>
@@ -417,14 +481,18 @@ const Categories = () => {
         </Modal.Header>
         <Modal.Body>
           {categoryToDelete && (
-            <p>
-              <strong>{categoryToDelete.name}</strong> adlı kategoriyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            <div>
+              <p>
+                <strong>{categoryToDelete.name}</strong> adlı kategoriyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+              </p>
+              
               {categoryToDelete.productCount > 0 && (
                 <Alert variant="warning" className="mt-2">
-                  Bu kategoriye ait {categoryToDelete.productCount} ürün bulunmaktadır. Kategoriyi sildiğinizde bu ürünler kategorisiz kalacaktır.
+                  <p>Bu kategoriye ait <strong>{categoryToDelete.productCount}</strong> ürün bulunmaktadır.</p>
+                  <p className="mb-0">Kategoriyi sildiğinizde, bu ürünler otomatik olarak <strong>"DIGER"</strong> kategorisine aktarılacaktır. Eğer "DIGER" kategorisi yoksa, sistem tarafından oluşturulacaktır.</p>
                 </Alert>
               )}
-            </p>
+            </div>
           )}
         </Modal.Body>
         <Modal.Footer>

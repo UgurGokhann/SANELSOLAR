@@ -95,7 +95,6 @@ const categoryService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Kategori güncelleme hatası:", error);
       throw handleError(error);
     }
   },
@@ -107,10 +106,9 @@ const categoryService = {
       }
       
       
-      await api.delete(`/categories/${id}`);
+      await api.delete(`/categories/${id}?transferToDefault=true`);
       return true;
     } catch (error) {
-      console.error("Kategori silme hatası:", error);
       throw handleError(error);
     }
   },

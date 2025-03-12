@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace SANELSOLAR.Business.Services
 {
@@ -84,6 +85,12 @@ namespace SANELSOLAR.Business.Services
                     {
                         return new Response<CategoryUpdateDto>(ResponseType.NotFound, "Kategori bulunamadı");
                     }
+                    
+                    // "DIGER" kategorisinin güncellenmesini engelle
+                    if (unchangedEntity.Name == "DIGER")
+                    {
+                        return new Response<CategoryUpdateDto>(ResponseType.Error, "DIGER kategorisi güncellenemez");
+                    }
 
                     var entity = _mapper.Map<Category>(dto);
                     
@@ -95,9 +102,9 @@ namespace SANELSOLAR.Business.Services
                     if (!string.IsNullOrEmpty(entity.Description))
                         entity.Description = entity.Description.ToUpper();
                     
-                    entity.CategoryId = dto.CategoryId;
-                    entity.CreatedDate = unchangedEntity.CreatedDate;
-                    entity.CreatedUserId = unchangedEntity.CreatedUserId;
+                    //entity.CategoryId = dto.CategoryId;
+                    //entity.CreatedDate = unchangedEntity.CreatedDate;
+                    //entity.CreatedUserId = unchangedEntity.CreatedUserId;
                     
                     _uow.GetRepository<Category>().Update(entity, unchangedEntity);
                     await _uow.SaveChangesAsync();
@@ -147,6 +154,9 @@ namespace SANELSOLAR.Business.Services
                 // Map categories to DTOs
                 var categoryDtos = _mapper.Map<List<CategoryListDto>>(categories);
                 
+                // Her kategori için ürün sayısını hesapla
+                await SetProductCountsForCategories(categoryDtos);
+                
                 return new Response<List<CategoryListDto>>(ResponseType.Success, categoryDtos);
             }
             catch (Exception ex)
@@ -170,6 +180,9 @@ namespace SANELSOLAR.Business.Services
 
                     // Map categories to CategoryListDto
                     var allCategoryDtos = _mapper.Map<List<CategoryListDto>>(allCategories);
+                    
+                    // Her kategori için ürün sayısını hesapla
+                    await SetProductCountsForCategories(allCategoryDtos);
 
                     return new Response<List<CategoryListDto>>(ResponseType.Success, allCategoryDtos);
                 }
@@ -186,15 +199,124 @@ namespace SANELSOLAR.Business.Services
                 }
 
                 var categoryDtos = _mapper.Map<List<CategoryListDto>>(categories);
+                
+                // Her kategori için ürün sayısını hesapla
+                await SetProductCountsForCategories(categoryDtos);
+
                 return new Response<List<CategoryListDto>>(ResponseType.Success, categoryDtos);
             }
             catch (Exception ex)
             {
-                return new Response<List<CategoryListDto>>(ResponseType.Error, $"Kategoriler aranırken bir hata meydana geldi: {ex.Message}");
+                return new Response<List<CategoryListDto>>(ResponseType.Error, $"Kategori arama sırasında bir hata meydana geldi: {ex.Message}");
             }
         }
-
         
+        // Kategori DTO'ları için ürün sayılarını hesaplayan yardımcı metod
+        private async Task SetProductCountsForCategories(List<CategoryListDto> categoryDtos)
+        {
+            if (categoryDtos == null || !categoryDtos.Any())
+                return;
+                
+            // Tüm kategori ID'lerini al
+            var categoryIds = categoryDtos.Select(c => c.CategoryId).ToList();
+            
+            // Bu kategorilere ait ürün-kategori ilişkilerini getir
+            var productCategories = await _uow.GetRepository<ProductCategory>()
+                .GetAllAsync(pc => categoryIds.Contains(pc.CategoryId) && pc.IsActive);
+                
+            // Her kategori için ürün sayısını hesapla
+            foreach (var categoryDto in categoryDtos)
+            {
+                var count = productCategories.Count(pc => pc.CategoryId == categoryDto.CategoryId);
+                categoryDto.ProductCount = count;
+            }
+        }
         
+        public async Task<IResponse> RemoveCategoryAsync(int id, bool transferToDefault)
+        {
+            try
+            {
+                // Silinecek kategoriyi bul
+                var categoryToDelete = await _uow.GetRepository<Category>().FindAsync(id);
+                if (categoryToDelete == null)
+                {
+                    return new Response(ResponseType.NotFound, $"{id} nolu kategori bulunamadı");
+                }
+                
+                // "DIGER" kategorisinin silinmesini engelle
+                if (categoryToDelete.Name == "DIGER")
+                {
+                    return new Response(ResponseType.Error, "DIGER kategorisi silinemez");
+                }
+                
+                // Eğer transferToDefault true ise, ürünleri "DIGER" kategorisine aktar
+                if (transferToDefault)
+                {
+                    // Silinecek kategoriye ait ürün-kategori ilişkilerini bul
+                    var productCategories = await _uow.GetRepository<ProductCategory>()
+                        .GetAllAsync(pc => pc.CategoryId == id && pc.IsActive);
+                    
+                    // Eğer kategoriye ait ürünler varsa
+                    if (productCategories.Any())
+                    {
+                        // "DIGER" kategorisini bul veya oluştur
+                        var defaultCategory = await _uow.GetRepository<Category>()
+                            .GetByFilterAsync(c => c.Name == "DIGER" && c.IsActive);
+                        
+                        // Eğer "DIGER" kategorisi yoksa, oluştur
+                        if (defaultCategory == null)
+                        {
+                            defaultCategory = new Category
+                            {
+                                Name = "DIGER",
+                                Description = "Diğer kategorilere ait olmayan ürünler",
+                                IsActive = true,
+                                CreatedDate = DateTime.Now,
+                                CreatedUserId = 1 // Sistem kullanıcısı ID'si
+                            };
+                            
+                            await _uow.GetRepository<Category>().CreateAsync(defaultCategory);
+                            await _uow.SaveChangesAsync();
+                        }
+                        
+                        // Ürünleri "DIGER" kategorisine aktar
+                        foreach (var pc in productCategories)
+                        {
+                            // Ürünün zaten "DIGER" kategorisinde olup olmadığını kontrol et
+                            var existingRelation = await _uow.GetRepository<ProductCategory>()
+                                .GetByFilterAsync(x => x.ProductId == pc.ProductId && x.CategoryId == defaultCategory.CategoryId);
+                            
+                            // Eğer ürün zaten "DIGER" kategorisinde değilse, ekle
+                            if (existingRelation == null)
+                            {
+                                var newProductCategory = new ProductCategory
+                                {
+                                    ProductId = pc.ProductId,
+                                    CategoryId = defaultCategory.CategoryId,
+                                    IsActive = true,
+                                    CreatedDate = DateTime.Now,
+                                    CreatedUserId = pc.CreatedUserId
+                                };
+                                
+                                await _uow.GetRepository<ProductCategory>().CreateAsync(newProductCategory);
+                            }
+                        }
+                        
+                        // Değişiklikleri kaydet
+                        await _uow.SaveChangesAsync();
+                    }
+                }
+                
+                // Kategoriyi sil
+                _uow.GetRepository<Category>().Remove(categoryToDelete);
+                await _uow.SaveChangesAsync();
+                
+                return new Response(ResponseType.Success, "Kategori başarıyla silindi");
+            }
+            catch (Exception ex)
+            {
+                return new Response(ResponseType.Error, $"Kategori silinirken bir hata oluştu: {ex.Message}");
+            }
+        }
     }
 } 

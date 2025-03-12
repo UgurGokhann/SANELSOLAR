@@ -102,9 +102,9 @@ namespace SANELSOLAR.API.Controllers
 
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, [FromQuery] bool transferToDefault = false)
         {
-            var response = await _categoryService.RemoveAsync(id);
+            var response = await _categoryService.RemoveCategoryAsync(id, transferToDefault);
             return response.ResponseType switch
             {
                 ResponseType.Success => NoContent(),

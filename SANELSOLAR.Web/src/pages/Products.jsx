@@ -16,6 +16,7 @@ import {
   Alert,
   InputGroup,
   Spinner,
+  Badge,
 } from "react-bootstrap";
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes } from "react-icons/fa";
 
@@ -53,7 +54,7 @@ const Products = () => {
     quantity: 0,
     unit: "Adet",
     brand: "",
-    categoryIds: [],
+    categoryIds: []
   });
   
   // Ürün silme için state
@@ -193,10 +194,6 @@ const Products = () => {
       errors.name = "Ürün adı gereklidir";
     }
 
-    if (!formData.description.trim()) {
-      errors.description = "Ürün açıklaması gereklidir";
-    }
-
     if (!formData.priceUSD || isNaN(formData.priceUSD) || parseFloat(formData.priceUSD) <= 0) {
       errors.priceUSD = "Geçerli bir fiyat giriniz";
     }
@@ -294,10 +291,7 @@ const Products = () => {
     }
 
     try {
-      const response = await productService.updateProduct(
-        editFormData.productId,
-        editFormData
-      );
+      const response = await productService.updateProduct(editFormData);
       
       if (response) {
         toast.success("Ürün başarıyla güncellendi");
@@ -375,25 +369,50 @@ const Products = () => {
             </Col>
           </Row>
 
+          {categoryId && (
+            <Row className="mb-3">
+              <Col>
+                <Alert variant="info" className="d-flex align-items-center justify-content-between mb-0">
+                  <div>
+                    <strong>Kategori Filtresi: </strong> 
+                    {categories.find(c => c.categoryId == categoryId)?.name || 'Seçili Kategori'}
+                  </div>
+                  <Button 
+                    variant="outline-secondary" 
+                    size="sm" 
+                    onClick={() => handleCategoryFilter(null)}
+                  >
+                    Filtreyi Kaldır <FaTimes />
+                  </Button>
+                </Alert>
+              </Col>
+            </Row>
+          )}
+
           <Row className="mb-3">
             <Col>
               <div className="d-flex flex-wrap gap-2">
                 <Button
                   variant={!categoryId ? "primary" : "outline-secondary"}
-            onClick={() => handleCategoryFilter(null)}
-          >
-            Tümü
+                  onClick={() => handleCategoryFilter(null)}
+                >
+                  Tümü
                 </Button>
-          {categories.map((category) => (
+                {categories.map((category) => (
                   <Button
-              key={category.categoryId}
+                    key={category.categoryId}
                     variant={categoryId == category.categoryId ? "primary" : "outline-secondary"}
-              onClick={() => handleCategoryFilter(category.categoryId)}
-            >
-              {category.name}
+                    onClick={() => handleCategoryFilter(category.categoryId)}
+                  >
+                    {category.name} 
+                    {category.productCount > 0 && (
+                      <Badge bg="light" text="dark" className="ms-1">
+                        {category.productCount}
+                      </Badge>
+                    )}
                   </Button>
-          ))}
-        </div>
+                ))}
+              </div>
             </Col>
           </Row>
 

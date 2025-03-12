@@ -110,30 +110,53 @@ namespace SANELSOLAR.Business.Services
                         entity.CreatedUserId = unchangedEntity.CreatedUserId;
                         
                         _uow.GetRepository<Product>().Update(entity, unchangedEntity);
-
-                        // Kategorileri güncelle
-                        var existingCategories = await _uow.GetRepository<ProductCategory>()
-                            .GetAllAsync(x => x.ProductId == dto.ProductId);
                         
-                        // Mevcut kategorileri kaldır
-                        foreach (var category in existingCategories)
+                        // Kategorileri sadece değişiklik varsa güncelle
+                        if (dto.CategoryIds != null)
                         {
-                            _uow.GetRepository<ProductCategory>().Remove(category);
-                        }
-                        
-                        // Yeni kategorileri ekle
-                        if (dto.CategoryIds != null && dto.CategoryIds.Count > 0)
-                        {
-                            foreach (var categoryId in dto.CategoryIds)
+                            // Mevcut kategorileri getir
+                            var existingCategories = await _uow.GetRepository<ProductCategory>()
+                                .GetAllAsync(x => x.ProductId == dto.ProductId);
+                            
+                            // Mevcut kategori ID'lerini al
+                            var existingCategoryIds = existingCategories.Select(x => x.CategoryId).ToList();
+                            
+                            // Yeni kategori ID'leri boş değilse karşılaştır, boşsa boş liste kullan
+                            var newCategoryIds = dto.CategoryIds.Count > 0 ? dto.CategoryIds : new List<int>();
+                            
+                            // Kategorilerde değişiklik var mı kontrol et
+                            bool categoriesChanged = !existingCategoryIds.OrderBy(x => x).SequenceEqual(newCategoryIds.OrderBy(x => x));
+                            
+                            if (categoriesChanged)
                             {
-                                var productCategory = new ProductCategory
+                                // Silinecek kategorileri bul (mevcut olup yeni listede olmayanlar)
+                                var categoriesToRemove = existingCategories
+                                    .Where(x => !newCategoryIds.Contains(x.CategoryId))
+                                    .ToList();
+                                
+                                // Eklenecek kategorileri bul (yeni listede olup mevcut olmayanlar)
+                                var categoryIdsToAdd = newCategoryIds
+                                    .Where(x => !existingCategoryIds.Contains(x))
+                                    .ToList();
+                                
+                                // Silinecek kategorileri kaldır
+                                foreach (var category in categoriesToRemove)
                                 {
-                                    ProductId = dto.ProductId,
-                                    CategoryId = categoryId,
-                                    CreatedUserId = dto.UpdatedUserId,
-                                    IsActive = true
-                                };
-                                await _uow.GetRepository<ProductCategory>().CreateAsync(productCategory);
+                                    _uow.GetRepository<ProductCategory>().Remove(category);
+                                }
+                                
+                                // Yeni kategorileri ekle
+                                foreach (var categoryId in categoryIdsToAdd)
+                                {
+                                    var productCategory = new ProductCategory
+                                    {
+                                        ProductId = dto.ProductId,
+                                        CategoryId = categoryId,
+                                        CreatedUserId = dto.UpdatedUserId,
+                                        IsActive = true
+                                    };
+                                    await _uow.GetRepository<ProductCategory>().CreateAsync(productCategory);
+                                }
                             }
                         }
                         
