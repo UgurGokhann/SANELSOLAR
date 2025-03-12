@@ -26,7 +26,6 @@ namespace SANELSOLAR.DTOs
         public string Unit { get; set; }
         public string Brand { get; set; }
         public List<int> CategoryIds { get; set; }
-        public List<CategoryListDto> Categories { get; set; }
     }
     
     // DTO for listing products with categories

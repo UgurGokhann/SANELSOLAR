@@ -34,5 +34,6 @@ namespace SANELSOLAR.DTOs
         public string Name { get; set; }
         public string? Description { get; set; }
         public List<ProductCreateDto>? Products { get; set; } = null;
+        public int ProductCount { get; set; } 
     }
 } 

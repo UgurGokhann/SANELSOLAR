@@ -50,8 +50,14 @@ const productService = {
 
   updateProduct: async (productData) => {
     try {
+      if (!productData || !productData.productId) {
+        throw new Error("Ürün ID bulunamadı!");
+      }
+      
+      // URL'de ve request body'de aynı ID'yi kullan
+      const productId = productData.productId;
       const response = await api.put(
-        `/products/${productData.productId}`,
+        `/products/${productId}`,
         productData
       );
       return response.data;
