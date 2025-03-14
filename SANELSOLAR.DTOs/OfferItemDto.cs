@@ -8,6 +8,8 @@ namespace SANELSOLAR.DTOs
         public int ProductId { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPriceUSD { get; set; }
+        public decimal TotalPriceUSD { get; set; }
+        public decimal TotalPriceTRY { get; set; }
     }
 
     public class UpdateOfferItemDto : BaseDTO

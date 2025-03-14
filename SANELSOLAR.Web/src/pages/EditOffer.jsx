@@ -231,7 +231,6 @@ const EditOffer = () => {
       const offerData = {
         offerId: parseInt(id),
         customerId: parseInt(selectedCustomer),
-        userId: 1, // Current user ID (should be dynamic in a real app)
         offerDate: new Date(offerDate).toISOString(),
         validUntil: new Date(validUntil).toISOString(),
         exchangeRate: parseFloat(exchangeRate),

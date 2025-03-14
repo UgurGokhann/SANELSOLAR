@@ -7,11 +7,13 @@ namespace SANELSOLAR.DTOs
     {
         public int CustomerId { get; set; }
         public int UserId { get; set; }
-        public DateTime OfferDate { get; set; } = DateTime.UtcNow;
+        public DateTime OfferDate { get; set; } 
         public DateTime ValidUntil { get; set; }
         public decimal ExchangeRate { get; set; }
         public string Notes { get; set; }
         public string Status { get; set; }
+        public decimal TotalAmountUSD { get; set; }
+        public decimal TotalAmountTRY { get; set; }
         public List<CreateOfferItemDto> OfferItems { get; set; }
     }
 
