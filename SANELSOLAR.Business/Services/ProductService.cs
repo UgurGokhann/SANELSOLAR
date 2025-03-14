@@ -105,10 +105,6 @@ namespace SANELSOLAR.Business.Services
                         if (!string.IsNullOrEmpty(entity.Description))
                             entity.Description = entity.Description.ToUpper();
                         
-                        entity.ProductId = dto.ProductId;
-                        entity.CreatedDate = unchangedEntity.CreatedDate;
-                        entity.CreatedUserId = unchangedEntity.CreatedUserId;
-                        
                         _uow.GetRepository<Product>().Update(entity, unchangedEntity);
                         
                         // Kategorileri sadece değişiklik varsa güncelle
