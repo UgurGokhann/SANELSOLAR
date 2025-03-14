@@ -410,26 +410,56 @@ const CreateOffer = () => {
                               console.log("Seçilen ürün:", product);
                               console.log("Güncellenecek satır ID:", item.id);
                               
-                              // Önce state'i doğrudan güncelle
-                              const updatedItems = offerItems.map(offerItem => {
-                                if (offerItem.id === item.id) {
-                                  const totalUSD = offerItem.quantity * (product.priceUSD || 0);
-                                  return {
-                                    ...offerItem,
-                                    productId: productId,
-                                    productName: product.name,
-                                    unitPriceUSD: product.priceUSD || 0,
-                                    brand: product.brand || 'SANEL SOLAR',
-                                    unit: product.unit || 'Adet',
-                                    totalUSD: totalUSD,
-                                    totalTRY: calculateTRYAmount(totalUSD)
-                                  };
-                                }
-                                return offerItem;
-                              });
+                              // Ürünün listede olup olmadığını kontrol et
+                              const existingItemIndex = offerItems.findIndex(
+                                existingItem => existingItem.productId === productId && existingItem.id !== item.id
+                              );
                               
-                              console.log("Güncellenmiş satırlar:", updatedItems);
-                              setOfferItems(updatedItems);
+                              if (existingItemIndex !== -1) {
+                                // Ürün zaten listede var, miktarını artır
+                                const updatedItems = offerItems.map((offerItem, index) => {
+                                  if (index === existingItemIndex) {
+                                    const newQuantity = offerItem.quantity + 1;
+                                    const totalUSD = newQuantity * offerItem.unitPriceUSD;
+                                    return {
+                                      ...offerItem,
+                                      quantity: newQuantity,
+                                      totalUSD: totalUSD,
+                                      totalTRY: calculateTRYAmount(totalUSD)
+                                    };
+                                  }
+                                  return offerItem;
+                                });
+                                
+                                // Boş satırı kaldır
+                                const filteredItems = updatedItems.filter(offerItem => 
+                                  offerItem.id !== item.id || offerItem.productId
+                                );
+                                
+                                console.log("Güncellenmiş satırlar:", filteredItems);
+                                setOfferItems(filteredItems);
+                              } else {
+                                // Ürün listede yok, normal şekilde ekle
+                                const updatedItems = offerItems.map(offerItem => {
+                                  if (offerItem.id === item.id) {
+                                    const totalUSD = offerItem.quantity * (product.priceUSD || 0);
+                                    return {
+                                      ...offerItem,
+                                      productId: productId,
+                                      productName: product.name,
+                                      unitPriceUSD: product.priceUSD || 0,
+                                      brand: product.brand || 'SANEL SOLAR',
+                                      unit: product.unit || 'Adet',
+                                      totalUSD: totalUSD,
+                                      totalTRY: calculateTRYAmount(totalUSD)
+                                    };
+                                  }
+                                  return offerItem;
+                                });
+                                
+                                console.log("Güncellenmiş satırlar:", updatedItems);
+                                setOfferItems(updatedItems);
+                              }
                             }
                           }}
                         >
@@ -529,6 +559,7 @@ const CreateOffer = () => {
               <Button 
                 variant="success" 
                 onClick={() => {
+                  // Yeni boş kalem ekle - ürün seçildiğinde zaten var olan ürünleri kontrol edecek
                   const newItem = { 
                     id: Date.now(), 
                     productId: '', 
