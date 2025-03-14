@@ -58,11 +58,10 @@ namespace SANELSOLAR.Business.Services
 
             // Create offer
             var offer = _mapper.Map<Offer>(dto);
-            
-            // Calculate totals
-            decimal totalUSD = 0;
-            if (dto.OfferItems != null && dto.OfferItems.Any())
+
+            if (dto.TotalAmountUSD == 0 && dto.OfferItems != null && dto.OfferItems.Any())
             {
+                decimal totalUSD = 0;
                 foreach (var item in dto.OfferItems)
                 {
                     var offerItem = _mapper.Map<OfferItem>(item);
@@ -70,10 +69,15 @@ namespace SANELSOLAR.Business.Services
                     offerItem.TotalPriceTRY = offerItem.TotalPriceUSD * dto.ExchangeRate;
                     totalUSD += offerItem.TotalPriceUSD;
                 }
+                
+                offer.TotalAmountUSD = totalUSD;
+                offer.TotalAmountTRY = totalUSD * dto.ExchangeRate;
             }
-            
-            offer.TotalAmountUSD = totalUSD;
-            offer.TotalAmountTRY = totalUSD * dto.ExchangeRate;
+            else
+            {
+                offer.TotalAmountUSD = dto.TotalAmountUSD;
+                offer.TotalAmountTRY = dto.TotalAmountTRY;
+            }
 
             await _uow.GetRepository<Offer>().CreateAsync(offer);
             await _uow.SaveChangesAsync();
@@ -85,26 +89,6 @@ namespace SANELSOLAR.Business.Services
         {
             try
             {
-                // Validate offer items
-                if (dto.OfferItems != null && dto.OfferItems.Any())
-                {
-                    foreach (var item in dto.OfferItems)
-                    {
-                        var itemValidationResult = _updateOfferItemDtoValidator.Validate(item);
-                        if (!itemValidationResult.IsValid)
-                        {
-                            return new Response<UpdateOfferDto>(ResponseType.ValidationError, dto)
-                            {
-                                ValidationErrors = itemValidationResult.Errors.Select(x => new CustomValidationError
-                                {
-                                    ErrorMessage = x.ErrorMessage,
-                                    PropertyName = x.PropertyName
-                                }).ToList()
-                            };
-                        }
-                    }
-                }
-
                 // Get existing offer
                 var existingOffer = await _uow.GetRepository<Offer>().FindAsync(dto.OfferId);
                 if (existingOffer == null)
@@ -118,58 +102,112 @@ namespace SANELSOLAR.Business.Services
                     .Where(x => x.OfferId == dto.OfferId)
                     .ToListAsync();
 
-                // Create updated offer entity
                 var updatedOffer = _mapper.Map<Offer>(dto);
 
-                // Calculate totals
-                decimal totalUSD = 0;
+                updatedOffer.TotalAmountUSD = dto.TotalAmountUSD;
+                updatedOffer.TotalAmountTRY = dto.TotalAmountTRY;
+
+                if (dto.TotalAmountUSD == 0 && dto.OfferItems != null && dto.OfferItems.Any())
+                {
+                    decimal totalUSD = 0;
+                    
+                    foreach (var item in dto.OfferItems)
+                    {
+                        decimal itemTotalUSD = item.Quantity * item.UnitPriceUSD;
+                        totalUSD += itemTotalUSD;
+                    }
+                    
+                    updatedOffer.TotalAmountUSD = totalUSD;
+                    updatedOffer.TotalAmountTRY = totalUSD * dto.ExchangeRate;
+                }
 
                 // Handle offer items
                 if (dto.OfferItems != null && dto.OfferItems.Any())
                 {
-                    // Items to add
                     var itemsToAdd = dto.OfferItems
                         .Where(x => x.OfferItemId == 0)
                         .ToList();
 
-                    // Items to update
                     var itemsToUpdate = dto.OfferItems
-                        .Where(x => x.OfferItemId != 0)
+                        .Where(x => x.OfferItemId > 0)
                         .ToList();
 
-                    // Items to delete
                     var itemsToDelete = existingOfferItems
                         .Where(x => !dto.OfferItems.Any(y => y.OfferItemId == x.OfferItemId))
                         .ToList();
 
-                    // Add new items
+                    // Process items to add
                     foreach (var item in itemsToAdd)
                     {
-                        var offerItem = _mapper.Map<OfferItem>(item);
-                        offerItem.OfferId = dto.OfferId;
-                        offerItem.TotalPriceUSD = item.Quantity * item.UnitPriceUSD;
-                        offerItem.TotalPriceTRY = offerItem.TotalPriceUSD * dto.ExchangeRate;
-                        totalUSD += offerItem.TotalPriceUSD;
+                        var createItemDto = new CreateOfferItemDto
+                        {
+                            OfferId = dto.OfferId,
+                            ProductId = item.ProductId,
+                            Quantity = item.Quantity,
+                            UnitPriceUSD = item.UnitPriceUSD
+                        };
+                        
+                        var itemValidationResult = _createOfferItemDtoValidator.Validate(createItemDto);
+                        if (!itemValidationResult.IsValid)
+                        {
+                            return new Response<UpdateOfferDto>(ResponseType.ValidationError, dto)
+                            {
+                                ValidationErrors = itemValidationResult.Errors.Select(x => new CustomValidationError
+                                {
+                                    ErrorMessage = x.ErrorMessage,
+                                    PropertyName = x.PropertyName
+                                }).ToList()
+                            };
+                        }
+
+                        var offerItem = new OfferItem
+                        {
+                            OfferId = dto.OfferId,
+                            ProductId = item.ProductId,
+                            Quantity = item.Quantity,
+                            UnitPriceUSD = item.UnitPriceUSD,
+                            TotalPriceUSD = item.Quantity * item.UnitPriceUSD,
+                            TotalPriceTRY = (item.Quantity * item.UnitPriceUSD) * dto.ExchangeRate
+                        };
 
                         await _uow.GetRepository<OfferItem>().CreateAsync(offerItem);
                     }
 
-                    // Update existing items
+                    // Process items to update
                     foreach (var item in itemsToUpdate)
                     {
+                        var itemValidationResult = _updateOfferItemDtoValidator.Validate(item);
+                        if (!itemValidationResult.IsValid)
+                        {
+                            return new Response<UpdateOfferDto>(ResponseType.ValidationError, dto)
+                            {
+                                ValidationErrors = itemValidationResult.Errors.Select(x => new CustomValidationError
+                                {
+                                    ErrorMessage = x.ErrorMessage,
+                                    PropertyName = x.PropertyName
+                                }).ToList()
+                            };
+                        }
+
                         var existingItem = existingOfferItems.FirstOrDefault(x => x.OfferItemId == item.OfferItemId);
                         if (existingItem != null)
                         {
-                            var updatedItem = _mapper.Map<OfferItem>(item);
-                            updatedItem.TotalPriceUSD = item.Quantity * item.UnitPriceUSD;
-                            updatedItem.TotalPriceTRY = updatedItem.TotalPriceUSD * dto.ExchangeRate;
-                            totalUSD += updatedItem.TotalPriceUSD;
+                            var updatedItem = new OfferItem
+                            {
+                                OfferItemId = item.OfferItemId,
+                                OfferId = dto.OfferId,
+                                ProductId = item.ProductId,
+                                Quantity = item.Quantity,
+                                UnitPriceUSD = item.UnitPriceUSD,
+                                TotalPriceUSD = item.Quantity * item.UnitPriceUSD,
+                                TotalPriceTRY = (item.Quantity * item.UnitPriceUSD) * dto.ExchangeRate
+                            };
 
                             _uow.GetRepository<OfferItem>().Update(updatedItem, existingItem);
                         }
                     }
 
-                    // Delete removed items
+                    // Process items to delete
                     foreach (var item in itemsToDelete)
                     {
                         _uow.GetRepository<OfferItem>().Remove(item);
@@ -184,11 +222,7 @@ namespace SANELSOLAR.Business.Services
                     }
                 }
 
-                // Update totals
-                updatedOffer.TotalAmountUSD = totalUSD;
-                updatedOffer.TotalAmountTRY = totalUSD * dto.ExchangeRate;
-
-                // Update the offer using the correct method signature
+                
                 _uow.GetRepository<Offer>().Update(updatedOffer, existingOffer);
                 await _uow.SaveChangesAsync();
 
@@ -196,10 +230,7 @@ namespace SANELSOLAR.Business.Services
             }
             catch (Exception ex)
             {
-                return new Response<UpdateOfferDto>(ResponseType.Error, $"Güncelleme sırasında bir hata oluştu: {ex.Message}")
-                {
-                    Data = dto
-                };
+                return new Response<UpdateOfferDto>(ResponseType.Error, $"Teklif güncellenirken bir hata oluştu: {ex.Message}");
             }
         }
 

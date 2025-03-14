@@ -199,16 +199,19 @@ const CreateOffer = () => {
       // Prepare offer data
       const offerData = {
         customerId: parseInt(selectedCustomer),
-        userId: 1, // Current user ID (should be dynamic in a real app)
         offerDate: new Date().toISOString(),
         validUntil: new Date(validUntil).toISOString(),
         exchangeRate: parseFloat(exchangeRate),
         notes: notes,
         status: 'Beklemede',
+        TotalAmountUSD: totalAmountUSD,
+        TotalAmountTRY: totalAmountTRY,
         offerItems: offerItems.filter(item => item.productId).map(item => ({
           productId: parseInt(item.productId),
           quantity: parseInt(item.quantity),
-          unitPriceUSD: parseFloat(item.unitPriceUSD)
+          unitPriceUSD: parseFloat(item.unitPriceUSD),
+          totalPriceUSD: parseFloat(item.totalUSD),
+          totalPriceTRY: parseFloat(item.totalTRY)
         }))
       };
 
@@ -323,6 +326,7 @@ const CreateOffer = () => {
                   <Form.Control
                     type="number"
                     step="0.01"
+                    min="0"
                     value={exchangeRate}
                     onChange={handleExchangeRateChange}
                     required

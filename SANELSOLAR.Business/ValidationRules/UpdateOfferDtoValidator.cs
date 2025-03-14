@@ -10,7 +10,6 @@ namespace SANELSOLAR.Business.ValidationRules
         {
             RuleFor(x => x.OfferId).NotEmpty().WithMessage("Teklif ID boş olamaz.");
             RuleFor(x => x.CustomerId).NotEmpty().WithMessage("Müşteri seçilmelidir.");
-            RuleFor(x => x.UserId).NotEmpty().WithMessage("Kullanıcı seçilmelidir.");
             RuleFor(x => x.OfferDate).NotEmpty().WithMessage("Teklif tarihi boş olamaz.");
             RuleFor(x => x.ValidUntil).NotEmpty().WithMessage("Geçerlilik tarihi boş olamaz.");
             RuleFor(x => x.ValidUntil).GreaterThan(x => x.OfferDate).WithMessage("Geçerlilik tarihi teklif tarihinden sonra olmalıdır.");
