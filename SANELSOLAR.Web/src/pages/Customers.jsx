@@ -8,11 +8,11 @@ import {
   Table,
   Form,
   Modal,
-  Alert,
   InputGroup,
   Spinner,
 } from "react-bootstrap";
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes } from "react-icons/fa";
+import { toast } from "react-toastify";
 import customerService from "../services/customerService";
 import { useAuth } from "../context/AuthContext";
 
@@ -20,7 +20,6 @@ const Customers = () => {
   const { isAuthenticated } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -45,12 +44,10 @@ const Customers = () => {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await customerService.getAllCustomers();
       setCustomers(data);
     } catch (err) {
-      setError(err.message || "Müşteriler yüklenirken bir hata oluştu.");
-      console.error("Müşteriler yüklenirken hata:", err);
+      toast.error(err.message || "Müşteriler yüklenirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
@@ -59,12 +56,10 @@ const Customers = () => {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await customerService.searchCustomers(searchTerm);
       setCustomers(data);
     } catch (err) {
-      setError(err.message || "Müşteri araması sırasında bir hata oluştu.");
-      console.error("Müşteri araması sırasında hata:", err);
+      toast.error(err.message || "Müşteri araması sırasında bir hata oluştu.");
     } finally {
       setLoading(false);
     }
@@ -107,6 +102,7 @@ const Customers = () => {
   };
 
   const openEditModal = (customer) => {
+    setValidationErrors({});
     setCurrentCustomer(customer);
     setFormData({
       customerId: customer.customerId,
@@ -120,14 +116,81 @@ const Customers = () => {
   };
 
   const openDeleteModal = (customer) => {
+    setValidationErrors({});
     setCurrentCustomer(customer);
     setShowDeleteModal(true);
   };
 
+  // Form validasyon fonksiyonu
+  const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+
+    // Ad kontrolü
+    if (!formData.firstname || formData.firstname.trim() === '') {
+      errors.firstname = "Ad alanı zorunludur";
+      isValid = false;
+    } else if (formData.firstname.length < 2) {
+      errors.firstname = "Ad en az 2 karakter olmalıdır";
+      isValid = false;
+    }
+
+    // Soyad kontrolü
+    if (!formData.lastname || formData.lastname.trim() === '') {
+      errors.lastname = "Soyad alanı zorunludur";
+      isValid = false;
+    } else if (formData.lastname.length < 2) {
+      errors.lastname = "Soyad en az 2 karakter olmalıdır";
+      isValid = false;
+    }
+
+    // Email kontrolü
+    if (!formData.email || formData.email.trim() === '') {
+      errors.email = "E-posta alanı zorunludur";
+      isValid = false;
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        errors.email = "Geçerli bir e-posta adresi giriniz";
+        isValid = false;
+      }
+    }
+
+    // Telefon kontrolü
+    if (!formData.phone || formData.phone.trim() === '') {
+      errors.phone = "Telefon alanı zorunludur";
+      isValid = false;
+    } else {
+      // Basit telefon formatı kontrolü (en az 10 karakter ve sadece rakam)
+      const phoneRegex = /^\d{10,11}$/;
+      if (!phoneRegex.test(formData.phone.replace(/[^0-9]/g, ''))) {
+        errors.phone = "Geçerli bir telefon numarası giriniz (10-11 rakam)";
+        isValid = false;
+      }
+    }
+
+    // Adres kontrolü
+    if (!formData.address || formData.address.trim() === '') {
+      errors.address = "Adres alanı zorunludur";
+      isValid = false;
+    } else if (formData.address.length < 10) {
+      errors.address = "Adres en az 10 karakter olmalıdır";
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
   const handleAddCustomer = async () => {
+    // Form validasyonu yap
+    if (!validateForm()) {
+      toast.error("Lütfen form alanlarını kontrol ediniz.");
+      return;
+    }
+    
     try {
       setLoading(true);
-      setError(null);
       const response = await customerService.createCustomer(formData);
       
       if (response.isError) {
@@ -138,8 +201,9 @@ const Customers = () => {
               return acc;
             }, {})
           );
+          toast.error("Lütfen form alanlarını kontrol ediniz.");
         } else {
-          setError(response.message);
+          toast.error(response.message || "Müşteri eklenirken bir hata oluştu.");
         }
         return;
       }
@@ -147,18 +211,23 @@ const Customers = () => {
       await loadCustomers();
       setShowAddModal(false);
       resetForm();
+      toast.success("Müşteri başarıyla eklendi.");
     } catch (err) {
-      setError(err.message || "Müşteri eklenirken bir hata oluştu.");
-      console.error("Müşteri eklenirken hata:", err);
+      toast.error(err.message || "Müşteri eklenirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpdateCustomer = async () => {
+    // Form validasyonu yap
+    if (!validateForm()) {
+      toast.error("Lütfen form alanlarını kontrol ediniz.");
+      return;
+    }
+    
     try {
       setLoading(true);
-      setError(null);
       const response = await customerService.updateCustomer(formData);
       
       if (response.isError) {
@@ -169,8 +238,9 @@ const Customers = () => {
               return acc;
             }, {})
           );
+          toast.error("Lütfen form alanlarını kontrol ediniz.");
         } else {
-          setError(response.message);
+          toast.error(response.message || "Müşteri güncellenirken bir hata oluştu.");
         }
         return;
       }
@@ -178,9 +248,9 @@ const Customers = () => {
       await loadCustomers();
       setShowEditModal(false);
       resetForm();
+      toast.success("Müşteri başarıyla güncellendi.");
     } catch (err) {
-      setError(err.message || "Müşteri güncellenirken bir hata oluştu.");
-      console.error("Müşteri güncellenirken hata:", err);
+      toast.error(err.message || "Müşteri güncellenirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
@@ -189,13 +259,12 @@ const Customers = () => {
   const handleDeleteCustomer = async () => {
     try {
       setLoading(true);
-      setError(null);
       await customerService.deleteCustomer(currentCustomer.customerId);
       await loadCustomers();
       setShowDeleteModal(false);
+      toast.success("Müşteri başarıyla silindi.");
     } catch (err) {
-      setError(err.message || "Müşteri silinirken bir hata oluştu.");
-      console.error("Müşteri silinirken hata:", err);
+      toast.error(err.message || "Müşteri silinirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
@@ -208,8 +277,6 @@ const Customers = () => {
           <h4 className="mb-0">Müşteri Yönetimi</h4>
         </Card.Header>
         <Card.Body>
-          {error && <Alert variant="danger">{error}</Alert>}
-
           <Row className="mb-3">
             <Col md={6}>
               <InputGroup>
@@ -241,9 +308,9 @@ const Customers = () => {
               <p className="mt-2">Yükleniyor...</p>
             </div>
           ) : customers.length === 0 ? (
-            <Alert variant="info">
-              Kayıtlı müşteri bulunamadı. Yeni müşteri eklemek için "Yeni Müşteri" butonuna tıklayın.
-            </Alert>
+            <div className="text-center py-4">
+              <p>Kayıtlı müşteri bulunamadı. Yeni müşteri eklemek için "Yeni Müşteri" butonuna tıklayın.</p>
+            </div>
           ) : (
             <Table responsive striped hover>
               <thead>
