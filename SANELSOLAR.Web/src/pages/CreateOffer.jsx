@@ -96,9 +96,25 @@ const CreateOffer = () => {
       date.setDate(date.getDate() + 30);
       setValidUntil(date.toISOString().split('T')[0]);
 
-      // Generate reference number
-      const refNumber = `ST-${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
-      setReferenceNumber(refNumber);
+      // Generate reference number in format ST-YYMMDD0001
+      const today = new Date();
+      const year = today.getFullYear().toString().slice(-2); // Last two digits of year
+      const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Month (01-12)
+      const day = today.getDate().toString().padStart(2, '0'); // Day (01-31)
+      
+      const datePrefix = `${year}${month}${day}`;
+      
+      try {
+        // Get the next sequential number
+        const sequentialNumber = await offerService.getNextSequentialNumber(datePrefix);
+        const refNumber = `ST-${datePrefix}${sequentialNumber}`;
+        setReferenceNumber(refNumber);
+      } catch (error) {
+        console.warn("Error generating reference number:", error);
+        // Fallback to a default reference number
+        const refNumber = `ST-${datePrefix}0001`;
+        setReferenceNumber(refNumber);
+      }
     } catch (error) {
       toast.error('Veriler yüklenirken bir hata oluştu');
     } finally {
@@ -190,6 +206,17 @@ const CreateOffer = () => {
       return;
     }
 
+    // Check if validUntil date is not earlier than today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of day for fair comparison
+    const validUntilDate = new Date(validUntil);
+    validUntilDate.setHours(0, 0, 0, 0);
+
+    if (validUntilDate < today) {
+      toast.warning('Geçerlilik tarihi bugünden daha eski olamaz');
+      return;
+    }
+
     if (offerItems.length === 0 || (offerItems.length === 1 && !offerItems[0].productId)) {
       toast.warning('Lütfen en az bir ürün ekleyin');
       return;
@@ -209,6 +236,7 @@ const CreateOffer = () => {
         status: 'Beklemede',
         TotalAmountUSD: totalAmountUSD,
         TotalAmountTRY: totalAmountTRY,
+        referenceNumber: referenceNumber,
         offerItems: offerItems.filter(item => item.productId).map(item => ({
           productId: parseInt(item.productId),
           quantity: parseInt(item.quantity),
@@ -239,6 +267,24 @@ const CreateOffer = () => {
     const newMargin = parseFloat(e.target.value);
     if (!isNaN(newMargin) && newMargin >= 0) {
       setProfitMargin(newMargin);
+    }
+  };
+
+  // Add this function to validate the date when it changes
+  const handleValidUntilChange = (e) => {
+    const selectedDate = e.target.value;
+    setValidUntil(selectedDate);
+    
+    // Validate that the selected date is not earlier than today
+    if (selectedDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to beginning of day for fair comparison
+      const validUntilDate = new Date(selectedDate);
+      validUntilDate.setHours(0, 0, 0, 0);
+      
+      if (validUntilDate < today) {
+        toast.warning('Geçerlilik tarihi bugünden daha eski olamaz');
+      }
     }
   };
 
@@ -319,8 +365,9 @@ const CreateOffer = () => {
                   <Form.Control
                     type="date"
                     value={validUntil}
-                    onChange={(e) => setValidUntil(e.target.value)}
+                    onChange={handleValidUntilChange}
                     required
+                    min={new Date().toISOString().split('T')[0]} // Set minimum date to today
                   />
                 </Form.Group>
 

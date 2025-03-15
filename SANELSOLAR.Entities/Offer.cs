@@ -15,6 +15,7 @@ namespace SANELSOLAR.Entities
         public decimal TotalAmountUSD { get; set; }
         public decimal TotalAmountTRY { get; set; }
         public string Status { get; set; }
+        public string ReferenceNumber { get; set; }
 
         // Navigation properties
         public Customer Customer { get; set; }

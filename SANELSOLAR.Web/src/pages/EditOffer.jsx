@@ -46,7 +46,7 @@ const EditOffer = () => {
     if (exchangeRate > 0 && offerItems.length > 0) {
       const updatedItems = offerItems.map(item => ({
         ...item,
-        totalTRY: calculateTRYAmount(item.totalUSD)
+        totalTRY: item.totalAmountTRY
       }));
       setOfferItems(updatedItems);
     }
@@ -104,7 +104,32 @@ const EditOffer = () => {
       }
       
       setNotes(offerData.notes || '');
-      setReferenceNumber(offerData.referenceNumber || `STS-${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`);
+      
+      // Use existing reference number if available, otherwise generate a new one
+      if (offerData.referenceNumber) {
+        setReferenceNumber(offerData.referenceNumber);
+      } else {
+        // Generate reference number in format ST-YYMMDD0001
+        const offerDate = new Date(offerData.offerDate);
+        const year = offerDate.getFullYear().toString().slice(-2); // Last two digits of year
+        const month = (offerDate.getMonth() + 1).toString().padStart(2, '0'); // Month (01-12)
+        const day = offerDate.getDate().toString().padStart(2, '0'); // Day (01-31)
+        
+        const datePrefix = `${year}${month}${day}`;
+        
+        try {
+          // Get the next sequential number
+          const sequentialNumber = await offerService.getNextSequentialNumber(datePrefix);
+          const refNumber = `ST-${datePrefix}${sequentialNumber}`;
+          setReferenceNumber(refNumber);
+        } catch (error) {
+          console.warn("Error generating reference number:", error);
+          // Fallback to a default reference number
+          const refNumber = `ST-${datePrefix}0001`;
+          setReferenceNumber(refNumber);
+        }
+      }
+      
       setOfferDate(new Date(offerData.offerDate).toISOString().split('T')[0]);
       setStatus(offerData.status || 'Beklemede');
 
@@ -221,6 +246,17 @@ const EditOffer = () => {
       return;
     }
 
+    // Check if validUntil date is not earlier than today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of day for fair comparison
+    const validUntilDate = new Date(validUntil);
+    validUntilDate.setHours(0, 0, 0, 0);
+
+    if (validUntilDate < today) {
+      toast.warning('Geçerlilik tarihi bugünden daha eski olamaz');
+      return;
+    }
+
     if (offerItems.length === 0 || (offerItems.length === 1 && !offerItems[0].productId)) {
       toast.warning('Lütfen en az bir ürün ekleyin');
       return;
@@ -241,6 +277,7 @@ const EditOffer = () => {
         totalAmountUSD: totalAmountUSD,
         totalAmountTRY: totalAmountTRY,
         status: status,
+        referenceNumber: referenceNumber,
         offerItems: offerItems.filter(item => item.productId).map(item => ({
           offerItemId: item.offerItemId || 0,
           offerId: parseInt(id),
@@ -273,6 +310,24 @@ const EditOffer = () => {
     const newMargin = parseFloat(e.target.value);
     if (!isNaN(newMargin) && newMargin >= 0) {
       setProfitMargin(newMargin);
+    }
+  };
+
+  // Add this function to validate the date when it changes
+  const handleValidUntilChange = (e) => {
+    const selectedDate = e.target.value;
+    setValidUntil(selectedDate);
+    
+    // Validate that the selected date is not earlier than today
+    if (selectedDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to beginning of day for fair comparison
+      const validUntilDate = new Date(selectedDate);
+      validUntilDate.setHours(0, 0, 0, 0);
+      
+      if (validUntilDate < today) {
+        toast.warning('Geçerlilik tarihi bugünden daha eski olamaz');
+      }
     }
   };
 
@@ -363,8 +418,9 @@ const EditOffer = () => {
                   <Form.Control
                     type="date"
                     value={validUntil}
-                    onChange={(e) => setValidUntil(e.target.value)}
+                    onChange={handleValidUntilChange}
                     required
+                    min={new Date().toISOString().split('T')[0]} // Set minimum date to today
                   />
                 </Form.Group>
 
