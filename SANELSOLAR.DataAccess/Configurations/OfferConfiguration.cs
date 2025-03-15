@@ -17,6 +17,7 @@ namespace SANELSOLAR.DataAccess.Configurations
             builder.Property(o => o.TotalAmountUSD).HasColumnType("decimal(18,2)");
             builder.Property(o => o.TotalAmountTRY).HasColumnType("decimal(18,2)");
             builder.Property(o => o.Status).HasMaxLength(50);
+            builder.Property(o => o.ReferenceNumber).HasMaxLength(20);
 
             builder.HasOne(o => o.Customer)
                    .WithMany(c => c.Offers)

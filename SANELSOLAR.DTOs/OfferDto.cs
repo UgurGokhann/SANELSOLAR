@@ -14,6 +14,7 @@ namespace SANELSOLAR.DTOs
         public string Status { get; set; }
         public decimal TotalAmountUSD { get; set; }
         public decimal TotalAmountTRY { get; set; }
+        public string ReferenceNumber { get; set; }
         public List<CreateOfferItemDto> OfferItems { get; set; }
     }
 
@@ -29,6 +30,7 @@ namespace SANELSOLAR.DTOs
         public decimal TotalAmountUSD { get; set; }
         public decimal TotalAmountTRY { get; set; }
         public string Status { get; set; }
+        public string ReferenceNumber { get; set; }
         public List<UpdateOfferItemDto> OfferItems { get; set; }
     }
 
@@ -46,6 +48,7 @@ namespace SANELSOLAR.DTOs
         public decimal TotalAmountUSD { get; set; }
         public decimal TotalAmountTRY { get; set; }
         public string Status { get; set; }
+        public string ReferenceNumber { get; set; }
         public List<ListOfferItemDto> OfferItems { get; set; }
     }
 } 

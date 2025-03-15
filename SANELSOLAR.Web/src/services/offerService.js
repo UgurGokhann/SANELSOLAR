@@ -1,5 +1,18 @@
 import api from "./api";
 
+// Helper function to handle API errors
+const handleError = (error) => {
+  console.error("API Error:", error);
+  if (error.response && error.response.data) {
+    if (error.response.data.message) {
+      return new Error(error.response.data.message);
+    } else if (typeof error.response.data === 'string') {
+      return new Error(error.response.data);
+    }
+  }
+  return new Error("Bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
+};
+
 const offerService = {
   getAllOffers: async (filters = {}) => {
     try {
@@ -95,6 +108,37 @@ const offerService = {
     }
   },
 
+  // Helper function to get next sequential number for reference number
+  getNextSequentialNumber: async (datePrefix) => {
+    try {
+      // Get all offers
+      const offers = await offerService.getAllOffers();
+      
+      // Filter offers with reference numbers that match the date prefix
+      const matchingOffers = offers.filter(offer => 
+        offer.referenceNumber && offer.referenceNumber.startsWith(`ST-${datePrefix}`)
+      );
+      
+      if (matchingOffers.length === 0) {
+        return '0001'; // Start with 0001 if no matching offers
+      }
+      
+      // Extract the sequential numbers and find the highest
+      const sequentialNumbers = matchingOffers.map(offer => {
+        const match = offer.referenceNumber.match(/ST-\d{6}(\d{4})/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+      
+      const highestNumber = Math.max(...sequentialNumbers);
+      
+      // Return the next number, padded to 4 digits
+      return (highestNumber + 1).toString().padStart(4, '0');
+    } catch (error) {
+      console.warn("Error getting next sequential number:", error);
+      return '0001'; // Default to 0001 if there's an error
+    }
+  },
+
   // Helper function to get current exchange rate
   getCurrentExchangeRate: async () => {
     try {
@@ -120,36 +164,4 @@ const offerService = {
   }
 };
 
-// Hata işleme yardımcı fonksiyonu
-const handleError = (error) => {
-  if (error.response) {
-    // Sunucu yanıtı ile dönen hata
-    if (error.response.data && error.response.data.validationErrors) {
-      // Doğrulama hataları
-      return {
-        isError: true,
-        validationErrors: error.response.data.validationErrors,
-        message: "Doğrulama hatası oluştu.",
-      };
-    }
-    return {
-      isError: true,
-      message: error.response.data.message || "Bir hata oluştu.",
-      status: error.response.status,
-    };
-  } else if (error.request) {
-    // İstek yapıldı ama yanıt alınamadı
-    return {
-      isError: true,
-      message: "Sunucuya ulaşılamıyor. Lütfen internet bağlantınızı kontrol edin.",
-    };
-  } else {
-    // İstek oluşturulurken bir şeyler yanlış gitti
-    return {
-      isError: true,
-      message: error.message || "Bir hata oluştu.",
-    };
-  }
-};
-
-export default offerService; 
+export default offerService;
