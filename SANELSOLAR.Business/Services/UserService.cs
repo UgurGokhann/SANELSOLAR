@@ -16,6 +16,7 @@ namespace SANELSOLAR.Business.Services
     public class UserService : Service<UserCreateDto, UserUpdateDto, UserDto, User>, IUserService
     {
         private readonly IValidator<UserLoginDto> _userLoginDtoValidator;
+        private readonly IValidator<UserUpdateDto> _updateDtoValidator;
         private readonly IValidator<UserPasswordUpdateDto> _userPasswordUpdateDtoValidator;
         private readonly IJwtService _jwtService;
         private readonly IUow _uow;
@@ -31,6 +32,7 @@ namespace SANELSOLAR.Business.Services
             IUow uow) : base(mapper, createDtoValidator, updateDtoValidator, uow)
         {
             _userLoginDtoValidator = userLoginDtoValidator;
+            _updateDtoValidator = updateDtoValidator;
             _userPasswordUpdateDtoValidator = userPasswordUpdateDtoValidator;
             _jwtService = jwtService;
             _uow = uow;
@@ -74,7 +76,7 @@ namespace SANELSOLAR.Business.Services
                 }
 
                 // Generate JWT token with user roles
-                var roles = new List<string> { user.Role }; // In a real app, you might fetch roles from a role service
+                var roles = new List<string> { "User" }; // Default role for all users
                 var token = _jwtService.GenerateJwt(user, roles);
 
                 if (string.IsNullOrEmpty(token))
@@ -222,6 +224,47 @@ namespace SANELSOLAR.Business.Services
             catch (Exception ex)
             {
                 return new Response<UserCreateDto>(ResponseType.Error, $"Kullanıcı oluşturma sırasında bir hata oluştu: {ex.Message}");
+            }
+        }
+
+        // Override UpdateAsync to preserve password
+        public async Task<IResponse<UserUpdateDto>> UpdateAsync(UserUpdateDto dto)
+        {
+            try
+            {
+                var validationResult = _updateDtoValidator.Validate(dto);
+                if (validationResult.IsValid)
+                {
+                    var unchangedData = await _uow.GetRepository<User>().FindAsync(dto.UserId);
+                    if (unchangedData != null)
+                    {
+                        var entity = _mapper.Map<User>(dto);
+                        
+                        // Preserve the password from the existing user
+                        entity.Password = unchangedData.Password;
+                        entity.UpdatedDate = DateTime.Now;
+                        
+                        _uow.GetRepository<User>().Update(entity, unchangedData);
+                        await _uow.SaveChangesAsync();
+                        return new Response<UserUpdateDto>(ResponseType.Success, dto);
+                    }
+                    return new Response<UserUpdateDto>(ResponseType.NotFound, $"Güncellenecek kullanıcı bulunamadı");
+                }
+                return new Response<UserUpdateDto>(ResponseType.ValidationError, dto)
+                {
+                    ValidationErrors = validationResult.Errors.Select(x => new CustomValidationError
+                    {
+                        ErrorMessage = x.ErrorMessage,
+                        PropertyName = x.PropertyName
+                    }).ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Response<UserUpdateDto>(ResponseType.Error, $"Kullanıcı güncelleme sırasında bir hata oluştu: {ex.Message}")
+                {
+                    Data = dto
+                };
             }
         }
     }

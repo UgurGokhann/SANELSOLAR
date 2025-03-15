@@ -29,8 +29,6 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
             RuleFor(x => x.FirstName).MaximumLength(50).WithMessage("Ad en fazla 50 karakter olabilir");
             
             RuleFor(x => x.LastName).MaximumLength(50).WithMessage("Soyad en fazla 50 karakter olabilir");
-            
-            RuleFor(x => x.Role).NotEmpty().WithMessage("Kullanıcı rolü boş olamaz");
         }
     }
 
@@ -50,8 +48,6 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
             RuleFor(x => x.FirstName).MaximumLength(50).WithMessage("Ad en fazla 50 karakter olabilir");
             
             RuleFor(x => x.LastName).MaximumLength(50).WithMessage("Soyad en fazla 50 karakter olabilir");
-            
-            RuleFor(x => x.Role).NotEmpty().WithMessage("Kullanıcı rolü boş olamaz");
         }
     }
 

@@ -46,9 +46,15 @@ const EditOffer = () => {
     if (exchangeRate > 0 && offerItems.length > 0) {
       const updatedItems = offerItems.map(item => ({
         ...item,
-        totalTRY: item.totalAmountTRY
+        totalTRY: calculateTRYAmount(item.totalUSD || 0)
       }));
       setOfferItems(updatedItems);
+      
+      // Recalculate totals after updating items
+      const totalUSD = updatedItems.reduce((sum, item) => sum + (item.totalUSD || 0), 0);
+      const totalTRY = updatedItems.reduce((sum, item) => sum + (item.totalTRY || 0), 0);
+      setTotalAmountUSD(totalUSD);
+      setTotalAmountTRY(totalTRY);
     }
   }, [exchangeRate, profitMargin]);
 
@@ -62,8 +68,14 @@ const EditOffer = () => {
 
   // Helper function to calculate TRY amount with profit margin
   const calculateTRYAmount = (usdAmount) => {
+    if (!exchangeRate || exchangeRate <= 0) {
+      console.warn("Exchange rate is invalid:", exchangeRate);
+      return 0;
+    }
     const profitMultiplier = 1 + (profitMargin / 100);
-    return usdAmount * exchangeRate * profitMultiplier;
+    const result = usdAmount * exchangeRate * profitMultiplier;
+    console.log(`calculateTRYAmount: USD=${usdAmount}, Rate=${exchangeRate}, Margin=${profitMargin}%, Result=${result}`);
+    return result;
   };
 
   const fetchInitialData = async () => {
@@ -89,19 +101,26 @@ const EditOffer = () => {
       setSelectedCustomer(offerData.customerId.toString());
       setValidUntil(new Date(offerData.validUntil).toISOString().split('T')[0]);
       
+      // Set exchange rate first before calculating TRY amounts
+      let currentExchangeRate = 36.5; // Default fallback value
+      
       // Use the exchange rate from the offer data, or fetch current if not available
       if (offerData.exchangeRate) {
-        setExchangeRate(offerData.exchangeRate);
+        currentExchangeRate = offerData.exchangeRate;
       } else {
         try {
           const rateData = await offerService.getCurrentExchangeRate();
-          setExchangeRate(rateData.rate || 36.5);
+          currentExchangeRate = rateData.rate || 36.5;
         } catch (rateError) {
           console.warn("Error fetching exchange rate:", rateError);
-          setExchangeRate(36.5); // Default fallback value
+          // Default fallback value already set
           toast.warning("Döviz kuru alınamadı, varsayılan değer kullanılıyor.");
         }
       }
+      
+      // Set exchange rate state
+      setExchangeRate(currentExchangeRate);
+      console.log("Exchange rate set to:", currentExchangeRate);
       
       setNotes(offerData.notes || '');
       
@@ -141,8 +160,17 @@ const EditOffer = () => {
 
       // Set offer items
       if (offerData.offerItems && offerData.offerItems.length > 0) {
+        // Define a local calculation function that uses the current exchange rate
+        const calculateItemTRY = (usdAmount) => {
+          const profitMultiplier = 1 + (profitMargin / 100);
+          return usdAmount * currentExchangeRate * profitMultiplier;
+        };
+        
         const mappedItems = offerData.offerItems.map(item => {
           const product = productsData.find(p => p.productId === item.productId);
+          const totalUSD = item.quantity * item.unitPriceUSD;
+          const calculatedTRY = calculateItemTRY(totalUSD);
+          console.log(`Item ${item.productId} - USD: ${totalUSD}, TRY: ${calculatedTRY}, Exchange Rate: ${currentExchangeRate}, Profit Margin: ${profitMargin}`);
           return {
             id: item.offerItemId,
             offerItemId: item.offerItemId,
@@ -150,13 +178,20 @@ const EditOffer = () => {
             productName: product ? product.name : 'Ürün',
             quantity: item.quantity,
             unitPriceUSD: item.unitPriceUSD,
-            totalUSD: item.quantity * item.unitPriceUSD,
-            totalTRY: calculateTRYAmount(item.quantity * item.unitPriceUSD),
+            totalUSD: totalUSD,
+            totalTRY: calculatedTRY,
             unit: product ? product.unit : 'Adet',
             brand: product ? product.brand : 'SANEL SOLAR'
           };
         });
         setOfferItems(mappedItems);
+        
+        // Calculate and set total amounts immediately
+        const totalUSD = mappedItems.reduce((sum, item) => sum + (item.totalUSD || 0), 0);
+        const totalTRY = mappedItems.reduce((sum, item) => sum + (item.totalTRY || 0), 0);
+        console.log(`Total USD: ${totalUSD}, Total TRY: ${totalTRY}`);
+        setTotalAmountUSD(totalUSD);
+        setTotalAmountTRY(totalTRY);
       }
     } catch (error) {
       toast.error('Teklif verileri yüklenirken bir hata oluştu');
