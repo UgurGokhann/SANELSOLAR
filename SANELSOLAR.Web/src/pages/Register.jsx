@@ -97,8 +97,7 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: "User", // Varsayılan rol
+        lastName: formData.lastName
       };
 
       await register(userData);

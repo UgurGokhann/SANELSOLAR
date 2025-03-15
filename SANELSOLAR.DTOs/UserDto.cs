@@ -10,7 +10,6 @@ namespace SANELSOLAR.DTOs
         public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public string Role { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
     }
@@ -30,7 +29,6 @@ namespace SANELSOLAR.DTOs
         public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public string Role { get; set; }
     }
 
     // DTO for updating an existing user
@@ -41,7 +39,6 @@ namespace SANELSOLAR.DTOs
         public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public string Role { get; set; }
     }
 
     // DTO for updating user password
