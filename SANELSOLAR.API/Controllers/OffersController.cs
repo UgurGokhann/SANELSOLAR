@@ -22,9 +22,9 @@ namespace SANELSOLAR.API.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] OfferFilterDto filter)
         {
-            var response = await _offerService.GetAllAsync();
+            var response = await _offerService.GetAllOffersAsync(filter);
             return response.ResponseType switch
             {
                 ResponseType.Success => Ok(response.Data),
@@ -37,59 +37,8 @@ namespace SANELSOLAR.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
+            // Create a filter to get a specific offer by ID
             var response = await _offerService.GetOfferWithItemsAsync(id);
-            return response.ResponseType switch
-            {
-                ResponseType.Success => Ok(response.Data),
-                ResponseType.NotFound => NotFound(response.Message),
-                _ => BadRequest(response.Message)
-            };
-        }
-
-        [HttpGet("customer/{customerId}")]
-        [Authorize]
-        public async Task<IActionResult> GetByCustomer(int customerId)
-        {
-            var response = await _offerService.GetOffersByCustomerAsync(customerId);
-            return response.ResponseType switch
-            {
-                ResponseType.Success => Ok(response.Data),
-                ResponseType.NotFound => NotFound(response.Message),
-                _ => BadRequest(response.Message)
-            };
-        }
-
-        [HttpGet("user/{userId}")]
-        [Authorize]
-        public async Task<IActionResult> GetByUser(int userId)
-        {
-            var response = await _offerService.GetOffersByUserAsync(userId);
-            return response.ResponseType switch
-            {
-                ResponseType.Success => Ok(response.Data),
-                ResponseType.NotFound => NotFound(response.Message),
-                _ => BadRequest(response.Message)
-            };
-        }
-
-        [HttpGet("daterange")]
-        [Authorize]
-        public async Task<IActionResult> GetByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
-        {
-            var response = await _offerService.GetOffersByDateRangeAsync(startDate, endDate);
-            return response.ResponseType switch
-            {
-                ResponseType.Success => Ok(response.Data),
-                ResponseType.NotFound => NotFound(response.Message),
-                _ => BadRequest(response.Message)
-            };
-        }
-
-        [HttpGet("status/{status}")]
-        [Authorize]
-        public async Task<IActionResult> GetByStatus(string status)
-        {
-            var response = await _offerService.GetOffersByStatusAsync(status);
             return response.ResponseType switch
             {
                 ResponseType.Success => Ok(response.Data),
@@ -105,7 +54,7 @@ namespace SANELSOLAR.API.Controllers
             var response = await _offerService.CreateAsync(offerDto);
             return response.ResponseType switch
             {
-                ResponseType.Success => CreatedAtAction(nameof(GetById), new { id = 0 }, response.Data),
+                ResponseType.Success => Created("", response.Data),
                 ResponseType.ValidationError => BadRequest(response.ValidationErrors),
                 _ => BadRequest(response.Message)
             };
@@ -119,8 +68,8 @@ namespace SANELSOLAR.API.Controllers
             return response.ResponseType switch
             {
                 ResponseType.Success => Ok(response.Data),
-                ResponseType.NotFound => NotFound(response.Message),
                 ResponseType.ValidationError => BadRequest(response.ValidationErrors),
+                ResponseType.NotFound => NotFound(response.Message),
                 _ => BadRequest(response.Message)
             };
         }
@@ -145,7 +94,7 @@ namespace SANELSOLAR.API.Controllers
             var response = await _offerService.RemoveAsync(id);
             return response.ResponseType switch
             {
-                ResponseType.Success => Ok(),
+                ResponseType.Success => NoContent(),
                 ResponseType.NotFound => NotFound(response.Message),
                 _ => BadRequest(response.Message)
             };

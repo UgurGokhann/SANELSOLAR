@@ -12,8 +12,6 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
             RuleFor(x => x.Description).MaximumLength(500).WithMessage("Açıklama en fazla 500 karakter olabilir");
             RuleFor(x => x.PriceUSD).NotEmpty().WithMessage("Fiyat boş olamaz");
             RuleFor(x => x.PriceUSD).GreaterThan(0).WithMessage("Fiyat 0'dan büyük olmalıdır");
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Miktar boş olamaz");
-            RuleFor(x => x.Quantity).GreaterThanOrEqualTo(0).WithMessage("Miktar 0'dan küçük olamaz");
             RuleFor(x => x.Unit).NotEmpty().WithMessage("Birim boş olamaz");
             RuleFor(x => x.Unit).MaximumLength(20).WithMessage("Birim en fazla 20 karakter olabilir");
             RuleFor(x => x.Brand).NotEmpty().WithMessage("Marka boş olamaz");
@@ -32,8 +30,6 @@ namespace SANELSOLAR.Business.ValidationRules.FluentValidation
             RuleFor(x => x.Description).MaximumLength(500).WithMessage("Açıklama en fazla 500 karakter olabilir");
             RuleFor(x => x.PriceUSD).NotEmpty().WithMessage("Fiyat boş olamaz");
             RuleFor(x => x.PriceUSD).GreaterThan(0).WithMessage("Fiyat 0'dan büyük olmalıdır");
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Miktar boş olamaz");
-            RuleFor(x => x.Quantity).GreaterThanOrEqualTo(0).WithMessage("Miktar 0'dan küçük olamaz");
             RuleFor(x => x.Unit).NotEmpty().WithMessage("Birim boş olamaz");
             RuleFor(x => x.Unit).MaximumLength(20).WithMessage("Birim en fazla 20 karakter olabilir");
             RuleFor(x => x.Brand).NotEmpty().WithMessage("Marka boş olamaz");

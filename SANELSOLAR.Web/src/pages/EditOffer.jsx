@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Card, Form, Button, Row, Col, Table, InputGroup, Spinner } from 'react-bootstrap';
 import { FaPlus, FaTrash, FaSave, FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 import offerService from '../services/offerService';
 import customerService from '../services/customerService';
 import productService from '../services/productService';
@@ -11,6 +12,7 @@ import categoryService from '../services/categoryService';
 const EditOffer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [customers, setCustomers] = useState([]);
@@ -231,6 +233,7 @@ const EditOffer = () => {
       const offerData = {
         offerId: parseInt(id),
         customerId: parseInt(selectedCustomer),
+        userId: user?.userId || 1,
         offerDate: new Date(offerDate).toISOString(),
         validUntil: new Date(validUntil).toISOString(),
         exchangeRate: parseFloat(exchangeRate),

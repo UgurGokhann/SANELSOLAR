@@ -20,9 +20,6 @@ namespace SANELSOLAR.DataAccess.Configurations
             builder.Property(x => x.PriceUSD)
                 .IsRequired()
                 .HasPrecision(18, 2);
-            builder.Property(x => x.Quantity)
-                .IsRequired()
-                .HasDefaultValue(0);
             builder.Property(x => x.Unit)
                 .IsRequired()
                 .HasMaxLength(20);
