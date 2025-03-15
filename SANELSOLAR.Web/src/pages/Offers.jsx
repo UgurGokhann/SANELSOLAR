@@ -68,21 +68,25 @@ const Offers = () => {
   const applyFilters = async () => {
     setLoading(true);
     try {
-      let filteredOffers = [];
-
+      const filters = {};
+      
       if (filterCustomerId) {
-        filteredOffers = await offerService.getOffersByCustomer(filterCustomerId);
-      } else if (filterStatus) {
-        filteredOffers = await offerService.getOffersByStatus(filterStatus);
-      } else if (filterStartDate && filterEndDate) {
-        filteredOffers = await offerService.getOffersByDateRange(
-          new Date(filterStartDate).toISOString(),
-          new Date(filterEndDate).toISOString()
-        );
-      } else {
-        filteredOffers = await offerService.getAllOffers();
+        filters.customerId = filterCustomerId;
       }
-
+      
+      if (filterStatus) {
+        filters.status = filterStatus;
+      }
+      
+      if (filterStartDate) {
+        filters.startDate = new Date(filterStartDate).toISOString();
+      }
+      
+      if (filterEndDate) {
+        filters.endDate = new Date(filterEndDate).toISOString();
+      }
+      
+      const filteredOffers = await offerService.getAllOffers(filters);
       setOffers(filteredOffers);
     } catch (error) {
       toast.error('Filtreleme sırasında bir hata oluştu');

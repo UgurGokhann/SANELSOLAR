@@ -1,9 +1,19 @@
 import api from "./api";
 
 const offerService = {
-  getAllOffers: async () => {
+  getAllOffers: async (filters = {}) => {
     try {
-      const response = await api.get("/offers");
+      const { customerId, userId, startDate, endDate, status } = filters;
+      const params = {};
+      
+      // Add filters to params if they exist
+      if (customerId) params.customerId = customerId;
+      if (userId) params.userId = userId;
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      if (status) params.status = status;
+      
+      const response = await api.get("/offers", { params });
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -19,42 +29,21 @@ const offerService = {
     }
   },
 
+  // These methods are now deprecated and use the unified getAllOffers method
   getOffersByCustomer: async (customerId) => {
-    try {
-      const response = await api.get(`/offers/customer/${customerId}`);
-      return response.data;
-    } catch (error) {
-      throw handleError(error);
-    }
+    return offerService.getAllOffers({ customerId });
   },
 
   getOffersByUser: async (userId) => {
-    try {
-      const response = await api.get(`/offers/user/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw handleError(error);
-    }
+    return offerService.getAllOffers({ userId });
   },
 
   getOffersByDateRange: async (startDate, endDate) => {
-    try {
-      const response = await api.get("/offers/daterange", {
-        params: { startDate, endDate },
-      });
-      return response.data;
-    } catch (error) {
-      throw handleError(error);
-    }
+    return offerService.getAllOffers({ startDate, endDate });
   },
 
   getOffersByStatus: async (status) => {
-    try {
-      const response = await api.get(`/offers/status/${status}`);
-      return response.data;
-    } catch (error) {
-      throw handleError(error);
-    }
+    return offerService.getAllOffers({ status });
   },
 
   createOffer: async (offerData) => {

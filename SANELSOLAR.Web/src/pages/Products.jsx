@@ -37,7 +37,6 @@ const Products = () => {
     name: "",
     description: "",
     priceUSD: "",
-    quantity: 0,
     unit: "Adet",
     brand: "",
     categoryIds: [],
@@ -51,7 +50,6 @@ const Products = () => {
     name: "",
     description: "",
     priceUSD: "",
-    quantity: 0,
     unit: "Adet",
     brand: "",
     categoryIds: []
@@ -100,7 +98,8 @@ const Products = () => {
   useEffect(() => {
     if (products.length > 0) {
       const filtered = products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.brand.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredProducts(filtered);
     } else {
@@ -126,7 +125,8 @@ const Products = () => {
     // Mevcut ürünler içinde arama yap
     if (products.length > 0) {
       const filtered = products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.brand.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredProducts(filtered);
     }
@@ -198,10 +198,6 @@ const Products = () => {
       errors.priceUSD = "Geçerli bir fiyat giriniz";
     }
 
-    if (formData.quantity === undefined || isNaN(formData.quantity) || parseInt(formData.quantity) < 0) {
-      errors.quantity = "Geçerli bir miktar giriniz";
-    }
-
     if (!formData.unit.trim()) {
       errors.unit = "Birim gereklidir";
     }
@@ -236,7 +232,6 @@ const Products = () => {
         name: "",
         description: "",
         priceUSD: "",
-        quantity: 0,
         unit: "Adet",
         brand: "",
         categoryIds: [],
@@ -262,7 +257,6 @@ const Products = () => {
       name: product.name,
       description: product.description,
       priceUSD: product.priceUSD.toString(),
-      quantity: product.quantity,
       unit: product.unit,
       brand: product.brand,
       categoryIds: product.categories.map(cat => cat.categoryId),
@@ -347,7 +341,7 @@ const Products = () => {
               <InputGroup>
                 <Form.Control
                   type="text"
-                  placeholder="Ürün ara..."
+                  placeholder="Ürün adı veya marka ara..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -433,7 +427,7 @@ const Products = () => {
                   <th>Ürün Adı</th>
                   <th>Marka</th>
                   <th>Fiyat (USD)</th>
-                  <th>Miktar</th>
+                  <th>Birim</th>
                   <th>Kategoriler</th>
                   {isAuthenticated && <th>İşlemler</th>}
                 </tr>
@@ -445,7 +439,7 @@ const Products = () => {
                     <td>{product.name}</td>
                     <td>{product.brand}</td>
                     <td>${product.priceUSD.toFixed(2)}</td>
-                    <td>{product.quantity} {product.unit}</td>
+                    <td>{product.unit}</td>
                     <td>
                       {product.categories.map(cat => cat.name).join(", ")}
                     </td>
@@ -532,7 +526,7 @@ const Products = () => {
             </Form.Group>
 
             <Row>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Fiyat (USD)</Form.Label>
                   <Form.Control
@@ -549,23 +543,7 @@ const Products = () => {
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Miktar</Form.Label>
-                  <Form.Control
-                type="number"
-                    min="0"
-                name="quantity"
-                value={newProduct.quantity}
-                onChange={handleProductChange}
-                    isInvalid={!!formErrors.quantity}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formErrors.quantity}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Birim</Form.Label>
                   <Form.Control
@@ -669,7 +647,7 @@ const Products = () => {
             </Form.Group>
 
             <Row>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Fiyat (USD)</Form.Label>
                   <Form.Control
@@ -686,23 +664,7 @@ const Products = () => {
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Miktar</Form.Label>
-                  <Form.Control
-                type="number"
-                    min="0"
-                name="quantity"
-                value={editFormData.quantity}
-                onChange={handleEditFormChange}
-                    isInvalid={!!formErrors.quantity}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formErrors.quantity}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Birim</Form.Label>
                   <Form.Control

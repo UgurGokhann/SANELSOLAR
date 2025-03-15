@@ -236,85 +236,35 @@ namespace SANELSOLAR.Business.Services
 
         public async Task<IResponse<ListOfferDto>> GetOfferWithItemsAsync(int id)
         {
-            var offer = await _uow.GetRepository<Offer>()
-                .GetQuery()
-                .Include(x => x.Customer)
-                .Include(x => x.User)
-                .Include(x => x.OfferItems)
-                    .ThenInclude(x => x.Product)
-                .FirstOrDefaultAsync(x => x.OfferId == id && x.IsActive);
-
-            if (offer == null)
+            try
             {
-                return new Response<ListOfferDto>(ResponseType.NotFound, $"Teklif bulunamadı. ID: {id}");
+                var offer = await _uow.GetRepository<Offer>()
+                    .GetQuery()
+                    .Include(x => x.Customer)
+                    .Include(x => x.User)
+                    .Include(x => x.OfferItems)
+                        .ThenInclude(x => x.Product)
+                    .FirstOrDefaultAsync(x => x.OfferId == id && x.IsActive);
+
+                if (offer == null)
+                {
+                    return new Response<ListOfferDto>(ResponseType.NotFound, $"Teklif bulunamadı. ID: {id}");
+                }
+
+                var dto = _mapper.Map<ListOfferDto>(offer);
+                
+                // Ensure CustomerName is properly set
+                if (offer.Customer != null)
+                {
+                    dto.CustomerName = $"{offer.Customer.Firstname} {offer.Customer.Lastname}";
+                }
+
+                return new Response<ListOfferDto>(ResponseType.Success, dto);
             }
-
-            var dto = _mapper.Map<ListOfferDto>(offer);
-            return new Response<ListOfferDto>(ResponseType.Success, dto);
-        }
-
-        public async Task<IResponse<List<ListOfferDto>>> GetOffersByCustomerAsync(int customerId)
-        {
-            var offers = await _uow.GetRepository<Offer>()
-                .GetQuery()
-                .Include(x => x.Customer)
-                .Include(x => x.User)
-                .Include(x => x.OfferItems)
-                    .ThenInclude(x => x.Product)
-                .Where(x => x.CustomerId == customerId && x.IsActive)
-                .OrderByDescending(x => x.OfferDate)
-                .ToListAsync();
-
-            var dtos = _mapper.Map<List<ListOfferDto>>(offers);
-            return new Response<List<ListOfferDto>>(ResponseType.Success, dtos);
-        }
-
-        public async Task<IResponse<List<ListOfferDto>>> GetOffersByUserAsync(int userId)
-        {
-            var offers = await _uow.GetRepository<Offer>()
-                .GetQuery()
-                .Include(x => x.Customer)
-                .Include(x => x.User)
-                .Include(x => x.OfferItems)
-                    .ThenInclude(x => x.Product)
-                .Where(x => x.UserId == userId && x.IsActive)
-                .OrderByDescending(x => x.OfferDate)
-                .ToListAsync();
-
-            var dtos = _mapper.Map<List<ListOfferDto>>(offers);
-            return new Response<List<ListOfferDto>>(ResponseType.Success, dtos);
-        }
-
-        public async Task<IResponse<List<ListOfferDto>>> GetOffersByDateRangeAsync(DateTime startDate, DateTime endDate)
-        {
-            var offers = await _uow.GetRepository<Offer>()
-                .GetQuery()
-                .Include(x => x.Customer)
-                .Include(x => x.User)
-                .Include(x => x.OfferItems)
-                    .ThenInclude(x => x.Product)
-                .Where(x => x.OfferDate >= startDate && x.OfferDate <= endDate && x.IsActive)
-                .OrderByDescending(x => x.OfferDate)
-                .ToListAsync();
-
-            var dtos = _mapper.Map<List<ListOfferDto>>(offers);
-            return new Response<List<ListOfferDto>>(ResponseType.Success, dtos);
-        }
-
-        public async Task<IResponse<List<ListOfferDto>>> GetOffersByStatusAsync(string status)
-        {
-            var offers = await _uow.GetRepository<Offer>()
-                .GetQuery()
-                .Include(x => x.Customer)
-                .Include(x => x.User)
-                .Include(x => x.OfferItems)
-                    .ThenInclude(x => x.Product)
-                .Where(x => x.Status == status && x.IsActive)
-                .OrderByDescending(x => x.OfferDate)
-                .ToListAsync();
-
-            var dtos = _mapper.Map<List<ListOfferDto>>(offers);
-            return new Response<List<ListOfferDto>>(ResponseType.Success, dtos);
+            catch (Exception ex)
+            {
+                return new Response<ListOfferDto>(ResponseType.Error, $"Teklif getirilirken bir hata oluştu: {ex.Message}");
+            }
         }
 
         public async Task<IResponse> UpdateOfferStatusAsync(int offerId, string status)
@@ -397,6 +347,75 @@ namespace SANELSOLAR.Business.Services
             catch (Exception ex)
             {
                 return new Response<decimal>(ResponseType.Error, $"Toplam hesaplama sırasında bir hata oluştu: {ex.Message}");
+            }
+        }
+
+        public async Task<IResponse<List<ListOfferDto>>> GetAllOffersAsync(OfferFilterDto filter = null)
+        {
+            try
+            {
+                var query = _uow.GetRepository<Offer>()
+                    .GetQuery()
+                    .Include(x => x.Customer)
+                    .Include(x => x.User)
+                    .Include(x => x.OfferItems)
+                        .ThenInclude(x => x.Product)
+                    .Where(x => x.IsActive);
+
+                // Apply filters if provided
+                if (filter != null)
+                {
+                    // Filter by customer
+                    if (filter.CustomerId.HasValue)
+                    {
+                        query = query.Where(x => x.CustomerId == filter.CustomerId.Value);
+                    }
+
+                    // Filter by user
+                    if (filter.UserId.HasValue)
+                    {
+                        query = query.Where(x => x.UserId == filter.UserId.Value);
+                    }
+
+                    // Filter by date range
+                    if (filter.StartDate.HasValue)
+                    {
+                        query = query.Where(x => x.OfferDate >= filter.StartDate.Value);
+                    }
+
+                    if (filter.EndDate.HasValue)
+                    {
+                        query = query.Where(x => x.OfferDate <= filter.EndDate.Value);
+                    }
+
+                    // Filter by status
+                    if (!string.IsNullOrEmpty(filter.Status))
+                    {
+                        query = query.Where(x => x.Status == filter.Status);
+                    }
+                }
+
+                // Order by offer date (newest first)
+                query = query.OrderByDescending(x => x.OfferDate);
+
+                var offers = await query.ToListAsync();
+                var dtos = _mapper.Map<List<ListOfferDto>>(offers);
+
+                // Ensure CustomerName is properly set for each offer
+                foreach (var dto in dtos)
+                {
+                    var offer = offers.FirstOrDefault(o => o.OfferId == dto.OfferId);
+                    if (offer?.Customer != null)
+                    {
+                        dto.CustomerName = offer.Customer.Fullname;
+                    }
+                }
+
+                return new Response<List<ListOfferDto>>(ResponseType.Success, dtos);
+            }
+            catch (Exception ex)
+            {
+                return new Response<List<ListOfferDto>>(ResponseType.Error, $"Teklifler getirilirken bir hata oluştu: {ex.Message}");
             }
         }
     }

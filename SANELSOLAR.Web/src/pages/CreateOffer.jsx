@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Card, Form, Button, Row, Col, Table, InputGroup, Spinner } from 'react-bootstrap';
 import { FaPlus, FaTrash, FaSave, FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 import offerService from '../services/offerService';
 import customerService from '../services/customerService';
 import productService from '../services/productService';
@@ -10,6 +11,7 @@ import categoryService from '../services/categoryService';
 
 const CreateOffer = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [customers, setCustomers] = useState([]);
@@ -95,7 +97,7 @@ const CreateOffer = () => {
       setValidUntil(date.toISOString().split('T')[0]);
 
       // Generate reference number
-      const refNumber = `STS-${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
+      const refNumber = `ST-${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
       setReferenceNumber(refNumber);
     } catch (error) {
       toast.error('Veriler yüklenirken bir hata oluştu');
@@ -199,6 +201,7 @@ const CreateOffer = () => {
       // Prepare offer data
       const offerData = {
         customerId: parseInt(selectedCustomer),
+        userId: user?.userId || 1,
         offerDate: new Date().toISOString(),
         validUntil: new Date(validUntil).toISOString(),
         exchangeRate: parseFloat(exchangeRate),
