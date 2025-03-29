@@ -10,6 +10,8 @@ import Offers from "./pages/Offers";
 import CreateOffer from "./pages/CreateOffer";
 import EditOffer from "./pages/EditOffer";
 import OfferDetail from "./pages/OfferDetail";
+import OfferTemplates from "./pages/OfferTemplates";
+import OfferTemplateForm from "./pages/OfferTemplateForm";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -89,6 +91,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <OfferDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/offer-templates" 
+              element={
+                <ProtectedRoute>
+                  <OfferTemplates />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/offer-templates/create" 
+              element={
+                <ProtectedRoute>
+                  <OfferTemplateForm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/offer-templates/edit/:id" 
+              element={
+                <ProtectedRoute>
+                  <OfferTemplateForm />
                 </ProtectedRoute>
               } 
             />

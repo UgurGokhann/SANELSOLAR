@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstrap';
+import { Navbar as BootstrapNavbar, Nav, Container, Button, NavDropdown } from 'react-bootstrap';
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -41,7 +41,12 @@ const Navbar = () => {
             <Nav.Link as={Link} to="/products" className="nav-link">Ürünler</Nav.Link>
             <Nav.Link as={Link} to="/categories" className="nav-link">Kategoriler</Nav.Link>
             <Nav.Link as={Link} to="/customers" className="nav-link">Müşteriler</Nav.Link>
-            <Nav.Link as={Link} to="/offers" className="nav-link">Teklifler</Nav.Link>
+            <NavDropdown title="Teklifler" id="basic-nav-dropdown">
+              <NavDropdown.Item as={Link} to="/offers">Tüm Teklifler</NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/offers/new">Yeni Teklif Oluştur</NavDropdown.Item>
+              <NavDropdown.Divider />
+              <NavDropdown.Item as={Link} to="/offer-templates">Teklif Şablonları</NavDropdown.Item>
+            </NavDropdown>
           </Nav>
           
           <Nav className="ms-auto">

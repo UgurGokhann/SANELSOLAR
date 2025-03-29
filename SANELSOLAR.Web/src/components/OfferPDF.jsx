@@ -1,12 +1,37 @@
-import React, { useRef } from 'react';
-import { Button } from 'react-bootstrap';
+import React, { useRef, useState, useEffect } from 'react';
+import { Button, Spinner } from 'react-bootstrap';
 import { FaFilePdf } from 'react-icons/fa';
 import './OfferPDF.css';
+import offerTemplateService from '../services/offerTemplateService';
+import { toast } from 'react-toastify';
 
 const OfferPDF = ({ offer, customer, offerItems, products }) => {
   const printRef = useRef();
+  const [template, setTemplate] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTemplate = async () => {
+      try {
+        setLoading(true);
+        const templateData = await offerTemplateService.getDefaultTemplate();
+        setTemplate(templateData);
+      } catch (error) {
+        toast.error(error.message || 'Şablon yüklenirken bir hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTemplate();
+  }, []);
 
   const handlePrint = () => {
+    if (!template) {
+      toast.error('Şablon yüklenemedi. Lütfen tekrar deneyin.');
+      return;
+    }
+
     // Yeni bir iframe oluştur
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
@@ -41,10 +66,10 @@ const OfferPDF = ({ offer, customer, offerItems, products }) => {
         font-size: 28px;
         font-weight: bold;
         margin: 0;
-        color: #0099cc;
+        color: ${template.primaryColor || '#0099cc'};
       }
       .logo .solar {
-        color: #ffa500;
+        color: ${template.secondaryColor || '#ffa500'};
       }
       .logo p {
         margin: 0;
@@ -143,10 +168,10 @@ const OfferPDF = ({ offer, customer, offerItems, products }) => {
       .company-info h2 {
         font-size: 20px;
         margin: 0;
-        color: #0099cc;
+        color: ${template.primaryColor || '#0099cc'};
       }
       .company-info .solar {
-        color: #ffa500;
+        color: ${template.secondaryColor || '#ffa500'};
       }
       .company-info p {
         margin: 3px 0;
@@ -176,32 +201,32 @@ const OfferPDF = ({ offer, customer, offerItems, products }) => {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>SANEL SOLAR - Teklif #${offer?.offerId || ''}</title>
+          <title>${template.companyName || 'SANEL SOLAR'} - Teklif #${offer?.offerId || ''}</title>
           <meta charset="utf-8">
         </head>
         <body>
           <div class="offer-pdf">
-            <div class="offer-header">
+            <div class="offer-header" style="background-color: ${template.headerBgColor || '#ffffff'}">
               <div class="logo">
-                <h1>SANEL<span class="solar">SOLAR</span></h1>
-                <p>ENERJİ TEKNOLOJİLERİ</p>
+                <h1>${template.companyName?.split(' ')[0] || 'SANEL'}<span class="solar">${template.companyName?.split(' ').slice(1).join(' ') || 'SOLAR'}</span></h1>
+                <p>${template.companyTagline || 'ENERJİ TEKNOLOJİLERİ'}</p>
               </div>
               <div class="offer-type">
-                <h2>Ticari Teklif</h2>
-                <h3>LiFePO₄ Batarya</h3>
+                <h2>${template.offerTitle || 'Ticari Teklif'}</h2>
+                <h3>${template.offerSubtitle || 'LiFePO₄ Batarya'}</h3>
               </div>
             </div>
 
             <div class="offer-info">
               <div class="customer-info">
-                <h4>Müşteri Bilgileri</h4>
+                <h4>${template.customerTitle || 'Müşteri Bilgileri'}</h4>
                 <p><strong>Sayın ${customer?.fullname || ''}</strong></p>
-                <p>${customer?.phone || ''}</p>
-                <p>${customer?.address || ''}</p>
-                <p>Ürünlerin teslim süresi siparişten itibaren 7-10 iş günüdür.</p>
+                ${template.showCustomerPhone ? `<p>${customer?.phone || ''}</p>` : ''}
+                ${template.showCustomerAddress ? `<p>${customer?.address || ''}</p>` : ''}
+                <p>${template.deliveryTimeText || 'Ürünlerin teslim süresi siparişten itibaren 7-10 iş günüdür.'}</p>
               </div>
               <div class="offer-details">
-                <h4>Teklif Bilgileri</h4>
+                <h4>${template.offerInfoTitle || 'Teklif Bilgileri'}</h4>
                 <table>
                   <tbody>
                     <tr>
@@ -221,7 +246,7 @@ const OfferPDF = ({ offer, customer, offerItems, products }) => {
               </div>
             </div>
 
-            <p class="offer-note">Teklifimize işçilik, montaj, devreye alma dahildir.</p>
+            <p class="offer-note">${template.offerNoteText || 'Teklifimize işçilik, montaj, devreye alma dahildir.'}</p>
 
             <div class="offer-items">
               <table>
@@ -229,8 +254,10 @@ const OfferPDF = ({ offer, customer, offerItems, products }) => {
                   <tr>
                     <th>Ürün / Hizmet Adı</th>
                     <th>Miktar</th>
-                    <th>Birim</th>
+                    ${template.showUnitPrices ? '<th>Birim</th>' : ''}
                     <th>Marka</th>
+                    ${template.showUnitPrices ? '<th>Birim Fiyat (USD)</th>' : ''}
+                    ${template.showTotalPrices ? '<th>Toplam (USD)</th>' : ''}
                   </tr>
                 </thead>
                 <tbody>
@@ -240,8 +267,10 @@ const OfferPDF = ({ offer, customer, offerItems, products }) => {
                       <tr>
                         <td>${product?.name || ''}</td>
                         <td>${item.quantity || ''}</td>
-                        <td>${product?.unit || ''}</td>
+                        ${template.showUnitPrices ? `<td>${product?.unit || ''}</td>` : ''}
                         <td>${product?.brand || ''}</td>
+                        ${template.showUnitPrices ? `<td>$${item.unitPriceUSD?.toFixed(2) || '0.00'}</td>` : ''}
+                        ${template.showTotalPrices ? `<td>$${item.totalUSD?.toFixed(2) || '0.00'}</td>` : ''}
                       </tr>
                     `;
                   }).join('') || ''}
@@ -249,31 +278,37 @@ const OfferPDF = ({ offer, customer, offerItems, products }) => {
               </table>
             </div>
 
+            ${template.showTotalPrices ? `
             <div class="offer-total">
               <p>KDV HARİÇ TOP. FİYAT: <strong>₺${offer?.totalAmountTRY?.toFixed(2) || '0.00'}</strong></p>
             </div>
+            ` : ''}
 
             <div class="offer-terms">
-              <p>ÖDEME İLE BİRLİKTE SİPARİŞ İŞLEME ALINACAKTIR.</p>
-              <p>KREDİ KARTI İLE ÖDEMELERDE 12 AYA VARAN TAKSİT İMKANIMIZ BULUNMAKTADIR.</p>
-              <p>KREDİ KARTI İLE OLAN ÖDEMELERDE KOMİSYON FARKI UYGULANMAKTADIR.</p>
-              <p>OPSİYON SÜRESİ İÇERİSİNDE DÖNÜŞÜ OLMAYAN TEKLİFLERİMİZ İÇİN FİYAT REVİZE HAKKIMIZ SAKLIDIR</p>
+              ${template.termsAndConditions?.map(term => `<p>${term}</p>`).join('') || `
+                <p>ÖDEME İLE BİRLİKTE SİPARİŞ İŞLEME ALINACAKTIR.</p>
+                <p>KREDİ KARTI İLE ÖDEMELERDE 12 AYA VARAN TAKSİT İMKANIMIZ BULUNMAKTADIR.</p>
+                <p>KREDİ KARTI İLE OLAN ÖDEMELERDE KOMİSYON FARKI UYGULANMAKTADIR.</p>
+                <p>OPSİYON SÜRESİ İÇERİSİNDE DÖNÜŞÜ OLMAYAN TEKLİFLERİMİZ İÇİN FİYAT REVİZE HAKKIMIZ SAKLIDIR</p>
+              `}
             </div>
 
-            <div class="offer-footer">
+            <div class="offer-footer" style="background-color: ${template.footerBgColor || '#ffffff'}">
               <div class="company-info">
-                <h2>SANEL<span class="solar">SOLAR</span></h2>
-                <p>ENERJİ TEKNOLOJİLERİ</p>
-                <p>Adres: YAVUZ SULTAN MAHALLESİ HÜRRİYET CADDESİ NO:349</p>
-                <p>DERİNCE / KOCAELİ</p>
-                <p>0 532 420 91 21</p>
-                <p>DERİNCE V.D. / 336 056 4577</p>
-                <p>www.sanelsolar.com.tr | info@sanelsolar.com.tr</p>
+                <h2>${template.footerCompanyName?.split(' ')[0] || 'SANEL'}<span class="solar">${template.footerCompanyName?.split(' ').slice(1).join(' ') || 'SOLAR'}</span></h2>
+                <p>${template.footerCompanyTagline || 'ENERJİ TEKNOLOJİLERİ'}</p>
+                <p>Adres: ${template.footerAddress || 'YAVUZ SULTAN MAHALLESİ HÜRRİYET CADDESİ NO:349'}</p>
+                <p>${template.footerCity || 'DERİNCE / KOCAELİ'}</p>
+                <p>${template.footerPhone || '0 532 420 91 21'}</p>
+                <p>${template.footerTaxInfo || 'DERİNCE V.D. / 336 056 4577'}</p>
+                <p>${template.footerWebsite || 'www.sanelsolar.com.tr'} | ${template.footerEmail || 'info@sanelsolar.com.tr'}</p>
               </div>
               <div class="partners">
-                <div class="partner">LEXRON</div>
-                <div class="partner">solinv</div>
-                <div class="partner">MOTECH</div>
+                ${template.partners?.map(partner => `<div class="partner">${partner.partnerName}</div>`).join('') || `
+                  <div class="partner">LEXRON</div>
+                  <div class="partner">solinv</div>
+                  <div class="partner">MOTECH</div>
+                `}
               </div>
             </div>
           </div>
@@ -306,108 +341,31 @@ const OfferPDF = ({ offer, customer, offerItems, products }) => {
     return date.toLocaleDateString('tr-TR');
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center my-3">
+        <Spinner animation="border" variant="primary" />
+        <span className="ms-2">Şablon yükleniyor...</span>
+      </div>
+    );
+  }
+
+  if (!template) {
+    return (
+      <div className="alert alert-warning">
+        Teklif şablonu yüklenemedi. Lütfen daha sonra tekrar deneyin.
+      </div>
+    );
+  }
+
   return (
     <div>
       <Button variant="primary" onClick={handlePrint} className="mb-3">
         <FaFilePdf className="me-2" /> PDF Çıktısı Al
       </Button>
 
-      <div ref={printRef} className="offer-pdf">
-        <div className="offer-header">
-          <div className="logo">
-            <h1>SANEL<span className="solar">SOLAR</span></h1>
-            <p>ENERJİ TEKNOLOJİLERİ</p>
-          </div>
-          <div className="offer-type">
-            <h2>Ticari Teklif</h2>
-            <h3>LiFePO₄ Batarya</h3>
-          </div>
-        </div>
-
-        <div className="offer-info">
-          <div className="customer-info">
-            <h4>Müşteri Bilgileri</h4>
-            <p><strong>Sayın {customer?.fullname}</strong></p>
-            <p>{customer?.phone}</p>
-            <p>{offer?.installationAddress}</p>
-            <p>Ürünlerin teslim süresi siparişten itibaren 7-10 iş günüdür.</p>
-          </div>
-          <div className="offer-details">
-            <h4>Teklif Bilgileri</h4>
-            <table>
-              <tbody>
-                <tr>
-                  <td>Tarih</td>
-                  <td>{formatDate(offer?.offerDate)}</td>
-                </tr>
-                <tr>
-                  <td>Referans No</td>
-                  <td>{offer?.referenceNumber}</td>
-                </tr>
-                <tr>
-                  <td>Opsiyon</td>
-                  <td>{formatDate(offer?.validUntil)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <p className="offer-note">Teklifimize işçilik, montaj, devreye alma dahildir.</p>
-
-        <div className="offer-items">
-          <table>
-            <thead>
-              <tr>
-                <th>Ürün / Hizmet Adı</th>
-                <th>Miktar</th>
-                <th>Birim</th>
-                <th>Marka</th>
-              </tr>
-            </thead>
-            <tbody>
-              {offerItems?.map((item, index) => {
-                const product = products?.find(p => p.productId === item.productId);
-                return (
-                  <tr key={index}>
-                    <td>{product?.name}</td>
-                    <td>{item.quantity}</td>
-                    <td>{product?.unit}</td>
-                    <td>{product?.brand}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="offer-total">
-          <p>KDV HARİÇ TOP. FİYAT: <strong>₺{offer?.totalAmountTRY?.toFixed(2)}</strong></p>
-        </div>
-
-        <div className="offer-terms">
-          <p>ÖDEME İLE BİRLİKTE SİPARİŞ İŞLEME ALINACAKTIR.</p>
-          <p>KREDİ KARTI İLE ÖDEMELERDE 12 AYA VARAN TAKSİT İMKANIMIZ BULUNMAKTADIR.</p>
-          <p>KREDİ KARTI İLE OLAN ÖDEMELERDE KOMİSYON FARKI UYGULANMAKTADIR.</p>
-          <p>OPSİYON SÜRESİ İÇERİSİNDE DÖNÜŞÜ OLMAYAN TEKLİFLERİMİZ İÇİN FİYAT REVİZE HAKKIMIZ SAKLIDIR</p>
-        </div>
-
-        <div className="offer-footer">
-          <div className="company-info">
-            <h2>SANEL<span className="solar">SOLAR</span></h2>
-            <p>ENERJİ TEKNOLOJİLERİ</p>
-            <p>Adres: YAVUZ SULTAN MAHALLESİ HÜRRİYET CADDESİ NO:349</p>
-            <p>DERİNCE / KOCAELİ</p>
-            <p>0 532 420 91 21</p>
-            <p>DERİNCE V.D. / 336 056 4577</p>
-            <p>www.sanelsolar.com.tr | info@sanelsolar.com.tr</p>
-          </div>
-          <div className="partners">
-            <div className="partner">LEXRON</div>
-            <div className="partner">solinv</div>
-            <div className="partner">MOTECH</div>
-          </div>
-        </div>
+      <div ref={printRef} className="offer-pdf d-none">
+        {/* Bu div sadece referans için tutulacak, asıl içerik iframe içerisinde oluşturulacak */}
       </div>
     </div>
   );

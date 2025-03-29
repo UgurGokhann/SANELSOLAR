@@ -191,7 +191,8 @@ namespace SANELSOLAR.Business.Services
                                 dto.GetType().GetProperty("UserId") ?? 
                                 dto.GetType().GetProperty("CustomerId") ?? 
                                 dto.GetType().GetProperty("OfferId") ?? 
-                                dto.GetType().GetProperty("ExchangeRateId");
+                                dto.GetType().GetProperty("ExchangeRateId") ??
+                                dto.GetType().GetProperty("TemplateId");
 
                 return idProperty != null ? (int)idProperty.GetValue(dto) : 0;
             }

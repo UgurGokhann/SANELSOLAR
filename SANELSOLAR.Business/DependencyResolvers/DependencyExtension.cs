@@ -49,16 +49,19 @@ namespace SANELSOLAR.Business.DependencyResolvers
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IOfferService, OfferService>();
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IExchangeRateService, ExchangeRateService>();
-            services.AddScoped<IOfferService, OfferService>();
+            services.AddScoped<IOfferTemplateService, OfferTemplateService>();
 
 
             services.AddTransient<IValidator<CreateOfferDto>, CreateOfferDtoValidator>();
             services.AddTransient<IValidator<UpdateOfferDto>, UpdateOfferDtoValidator>();
             services.AddTransient<IValidator<CreateOfferItemDto>, CreateOfferItemDtoValidator>();
             services.AddTransient<IValidator<UpdateOfferItemDto>, UpdateOfferItemDtoValidator>();
-
+            services.AddTransient<IValidator<CreateOfferTemplateDto>, CreateOfferTemplateValidator>();
+            services.AddTransient<IValidator<UpdateOfferTemplateDto>, UpdateOfferTemplateValidator>();
+            
             // AutoMapper
             services.AddAutoMapper(opt =>
             {
@@ -69,7 +72,8 @@ namespace SANELSOLAR.Business.DependencyResolvers
                     new CategoryProfile(),
                     new CustomerProfile(),
                     new ExchangeRateProfile(),
-                    new OfferProfile()
+                    new OfferProfile(),
+                    new OfferTemplateProfile()
                 });
             });
 

@@ -24,6 +24,7 @@ namespace SANELSOLAR.DataAccess.Context
             modelBuilder.ApplyConfiguration(new OfferItemConfiguration());
             modelBuilder.ApplyConfiguration(new CustomerConfiguration());
             modelBuilder.ApplyConfiguration(new ExchangeRateConfiguration());
+            modelBuilder.ApplyConfiguration(new OfferTemplateConfiguration());
 
             modelBuilder.Entity<ProductCategory>()
             .HasKey(pc => new { pc.ProductId, pc.CategoryId });
@@ -55,6 +56,7 @@ namespace SANELSOLAR.DataAccess.Context
         public DbSet<Category> Categories { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<ExchangeRate> ExchangeRates { get; set; }
+        public DbSet<OfferTemplate> OfferTemplates { get; set; }
 
     }
 
